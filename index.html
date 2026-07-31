@@ -203,6 +203,31 @@
     transition:color .3s;
   }
   .panel .ghost:hover{color:rgba(230,207,154,.85)}
+  #aiBtn{
+    margin-top:14px;width:100%;
+    appearance:none;cursor:pointer;
+    background:linear-gradient(135deg,rgba(230,207,154,.16),rgba(230,207,154,.05));
+    border:1px solid rgba(230,207,154,.5);
+    color:#ecd9a8;
+    border-radius:14px;padding:13px;
+    font-family:var(--font);font-size:11.5px;font-weight:500;
+    letter-spacing:.16em;text-transform:uppercase;
+    transition:border-color .3s,background .3s,transform .25s;
+  }
+  #aiBtn i{font-style:normal;margin-right:6px}
+  #aiBtn:hover{
+    border-color:rgba(230,207,154,.85);
+    background:linear-gradient(135deg,rgba(230,207,154,.24),rgba(230,207,154,.08));
+    transform:translateY(-1px);
+  }
+  #aiStatus{
+    display:none;align-items:center;gap:11px;
+    margin-top:6px;padding:10px 4px;
+  }
+  #aiStatus span{
+    font-size:12.5px;font-weight:300;letter-spacing:.06em;
+    color:rgba(236,217,168,.85);
+  }
   .upload{
     margin-top:18px;padding-top:18px;
     border-top:1px solid rgba(255,255,255,.07);
@@ -340,11 +365,14 @@
       <span id="wordCount">0 слов</span>
       <button class="ghost" id="resetBtn">сбросить</button>
     </div>
+    <button id="aiBtn"><i>✦</i> Создать облако с ИИ</button>
+    <div id="aiStatus"><div class="spinner"></div><span id="aiStatusText"></span></div>
     <div class="upload">
       <div class="upload-instr">
         <i>Важно — прочитайте перед загрузкой</i>
-        Фото должно быть <b>в полный рост или по пояс</b>, лицом к камере,
-        на однотонном фоне. Из него соберётся ваш видео-аватар.
+        Фото должно быть <b>в полный рост или по пояс</b>, лицом к камере.
+        Фон любой — нейросеть вырежет вас из кадра сама.
+        Из этого фото соберётся ваш видео-аватар.
       </div>
       <button id="photoBtn">Загрузить своё фото</button>
       <input type="file" id="photoInput" accept="image/*" hidden>
@@ -414,8 +442,9 @@ const DEFAULTS = {
   ]
 };
 
-const LS_WORDS  = 'aura_words';
+const LS_WORDS  = 'aura_words';          // старый общий ключ (для переноса)
 const LS_GENDER = 'aura_gender';
+const wordsKey  = g => 'aura_words_' + g; // своё облако у мужчины и у женщины
 
 /* ============================== канвасы ============================== */
 
@@ -582,6 +611,235 @@ function cutBackground(img, precut){
   return c;
 }
 
+/* ============ нейросетевое вырезание человека (MediaPipe, в браузере) ============ */
+
+const MP_BASE  = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const MP_MODEL = 'https://storage.googleapis.com/mediapipe-models/image_segmenter/' +
+                 'selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite';
+
+let segmenterPromise = null;
+
+function getSegmenter(){
+  if (!segmenterPromise){
+    segmenterPromise = (async () => {
+      const { FilesetResolver, ImageSegmenter } = await import(MP_BASE);
+      const fileset = await FilesetResolver.forVisionTasks(MP_BASE + '/wasm');
+      const make = delegate => ImageSegmenter.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: MP_MODEL, delegate },
+        runningMode: 'IMAGE',
+        outputCategoryMask: false,
+        outputConfidenceMasks: true
+      });
+      try { return await make('GPU'); }
+      catch { return await make('CPU'); }
+    })().catch(e => { segmenterPromise = null; throw e; });
+  }
+  return segmenterPromise;
+}
+
+/* box-фильтр через интегральное изображение — основа guided filter */
+function boxFilter(src, w, h, r){
+  const sw = w + 1;
+  const sum = new Float64Array(sw * (h + 1));
+  for (let y = 0; y < h; y++){
+    let row = 0;
+    for (let x = 0; x < w; x++){
+      row += src[y * w + x];
+      sum[(y + 1) * sw + (x + 1)] = sum[y * sw + (x + 1)] + row;
+    }
+  }
+  const out = new Float32Array(w * h);
+  for (let y = 0; y < h; y++){
+    const y0 = Math.max(0, y - r), y1 = Math.min(h - 1, y + r);
+    for (let x = 0; x < w; x++){
+      const x0 = Math.max(0, x - r), x1 = Math.min(w - 1, x + r);
+      const s = sum[(y1 + 1) * sw + (x1 + 1)] - sum[y0 * sw + (x1 + 1)]
+              - sum[(y1 + 1) * sw + x0]       + sum[y0 * sw + x0];
+      out[y * w + x] = s / ((y1 - y0 + 1) * (x1 - x0 + 1));
+    }
+  }
+  return out;
+}
+
+/* guided filter: «примагничивает» грубую маску к реальным краям фотографии */
+function guidedFilter(guide, p, w, h, r, eps){
+  const n = w * h;
+  const II = new Float32Array(n), Ip = new Float32Array(n);
+  for (let i = 0; i < n; i++){ II[i] = guide[i] * guide[i]; Ip[i] = guide[i] * p[i]; }
+  const mI = boxFilter(guide, w, h, r);
+  const mP = boxFilter(p, w, h, r);
+  const mII = boxFilter(II, w, h, r);
+  const mIp = boxFilter(Ip, w, h, r);
+  const a = new Float32Array(n), b = new Float32Array(n);
+  for (let i = 0; i < n; i++){
+    const varI = mII[i] - mI[i] * mI[i];
+    const cov  = mIp[i] - mI[i] * mP[i];
+    a[i] = cov / (varI + eps);
+    b[i] = mP[i] - a[i] * mI[i];
+  }
+  const mA = boxFilter(a, w, h, r), mB = boxFilter(b, w, h, r);
+  const q = new Float32Array(n);
+  for (let i = 0; i < n; i++) q[i] = mA[i] * guide[i] + mB[i];
+  return q;
+}
+
+/* полный пайплайн: сегментация → матирование краёв → снятие ореола → грейд */
+async function cutBackgroundAI(img, onStage){
+  const seg = await getSegmenter();
+
+  const maxH = 1300;
+  const k = Math.min(1, maxH / img.naturalHeight);
+  const w = Math.max(1, Math.round(img.naturalWidth * k));
+  const h = Math.max(1, Math.round(img.naturalHeight * k));
+
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const cx = c.getContext('2d', { willReadFrequently: true });
+  cx.drawImage(img, 0, 0, w, h);
+
+  if (onStage) await onStage('Нейросеть ищет человека…');
+  const res = seg.segment(c);
+  const conf = res.confidenceMasks;
+  if (!conf || !conf.length){ res.close && res.close(); throw new Error('no masks'); }
+
+  const mw = conf[0].width, mh = conf[0].height;
+  const bg   = conf[0].getAsFloat32Array();                     // фон
+  const hair = conf[1] ? conf[1].getAsFloat32Array() : null;    // волосы
+  const face = conf[3] ? conf[3].getAsFloat32Array() : null;    // лицо
+
+  // грубая маска человека в разрешении модели
+  const coarse = new Float32Array(mw * mh);
+  for (let i = 0; i < mw * mh; i++) coarse[i] = 1 - bg[i];
+
+  // голова = волосы + лицо (для точного центра облака)
+  let headBox = null;
+  if (hair && face){
+    let minX = mw, minY = mh, maxX = -1, maxY = -1, cxs = 0, cnt = 0;
+    for (let y = 0; y < mh; y++)
+      for (let x = 0; x < mw; x++){
+        const i = y * mw + x;
+        if (hair[i] + face[i] > 0.55){
+          if (x < minX) minX = x; if (x > maxX) maxX = x;
+          if (y < minY) minY = y; if (y > maxY) maxY = y;
+          cxs += x; cnt++;
+        }
+      }
+    if (cnt > mw * mh * 0.0015 && maxY > minY)
+      headBox = { cx: cxs / cnt / mw, y0: minY / mh, y1: maxY / mh };
+  }
+
+  if (onStage) await onStage('Уточняем контур и волосы…');
+
+  // грубую маску растягиваем до рабочего размера (билинейно, через canvas)
+  const mc = document.createElement('canvas');
+  mc.width = mw; mc.height = mh;
+  const mctx = mc.getContext('2d');
+  const mimg = mctx.createImageData(mw, mh);
+  for (let i = 0; i < mw * mh; i++){
+    const v = Math.max(0, Math.min(255, Math.round(coarse[i] * 255)));
+    mimg.data[i * 4] = mimg.data[i * 4 + 1] = mimg.data[i * 4 + 2] = v;
+    mimg.data[i * 4 + 3] = 255;
+  }
+  mctx.putImageData(mimg, 0, 0);
+
+  const uc = document.createElement('canvas');
+  uc.width = w; uc.height = h;
+  const uctx = uc.getContext('2d', { willReadFrequently: true });
+  uctx.imageSmoothingEnabled = true;
+  uctx.imageSmoothingQuality = 'high';
+  uctx.drawImage(mc, 0, 0, w, h);
+  const up = uctx.getImageData(0, 0, w, h).data;
+
+  const n = w * h;
+  const alpha = new Float32Array(n);
+  for (let i = 0; i < n; i++) alpha[i] = up[i * 4] / 255;
+
+  // guide — яркость исходного кадра
+  const id = cx.getImageData(0, 0, w, h);
+  const d = id.data;
+  const guide = new Float32Array(n);
+  for (let i = 0; i < n; i++)
+    guide[i] = (0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]) / 255;
+
+  const r = Math.max(3, Math.round(Math.min(w, h) * 0.008));
+  let a = guidedFilter(guide, alpha, w, h, r, 8e-5);
+
+  // подтягиваем контраст маски: полупрозрачная дымка фона уходит,
+  // мягкость волос остаётся
+  for (let i = 0; i < n; i++){
+    let v = (a[i] - 0.22) / 0.6;
+    a[i] = v <= 0 ? 0 : v >= 1 ? 1 : v * v * (3 - 2 * v);
+  }
+
+  if (onStage) await onStage('Убираем цветной ореол…');
+
+  // оценка цвета фона рядом с контуром — для снятия подмеса
+  const bw = new Float32Array(n), br = new Float32Array(n),
+        bgc = new Float32Array(n), bb = new Float32Array(n);
+  for (let i = 0; i < n; i++){
+    if (a[i] < 0.1){
+      bw[i] = 1;
+      br[i] = d[i * 4]; bgc[i] = d[i * 4 + 1]; bb[i] = d[i * 4 + 2];
+    }
+  }
+  const rr = Math.max(8, Math.round(Math.min(w, h) * 0.03));
+  const sw2 = boxFilter(bw, w, h, rr);
+  const sr = boxFilter(br, w, h, rr), sg = boxFilter(bgc, w, h, rr), sb = boxFilter(bb, w, h, rr);
+
+  const DESAT = 0.28, EXPOSURE = 0.88;
+  for (let i = 0; i < n; i++){
+    const al = a[i];
+    d[i * 4 + 3] = Math.round(al * 255);
+    if (al <= 0.004) continue;
+
+    let R = d[i * 4], G = d[i * 4 + 1], B = d[i * 4 + 2];
+    if (al < 0.985 && sw2[i] > 0.02){
+      const Br = sr[i] / sw2[i], Bg = sg[i] / sw2[i], Bb = sb[i] / sw2[i];
+      const inv = 1 - al;
+      R = (R - inv * Br) / al; G = (G - inv * Bg) / al; B = (B - inv * Bb) / al;
+      R = R < 0 ? 0 : R > 255 ? 255 : R;
+      G = G < 0 ? 0 : G > 255 ? 255 : G;
+      B = B < 0 ? 0 : B > 255 ? 255 : B;
+    }
+    const l = 0.299 * R + 0.587 * G + 0.114 * B;
+    d[i * 4]     = (R * (1 - DESAT) + l * DESAT) * EXPOSURE;
+    d[i * 4 + 1] = (G * (1 - DESAT) + l * DESAT) * EXPOSURE;
+    d[i * 4 + 2] = (B * (1 - DESAT) + l * DESAT) * EXPOSURE;
+  }
+  cx.putImageData(id, 0, 0);
+  res.close && res.close();
+
+  // обрезаем пустые поля вокруг фигуры
+  let minX = w, minY = h, maxX = -1, maxY = -1;
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++)
+      if (a[y * w + x] > 0.06){
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+  if (maxX < minX) return { cv: c, head: null };
+
+  const pad = 6;
+  const x0 = Math.max(0, minX - pad), y0 = Math.max(0, minY - pad);
+  const cw = Math.min(w - 1, maxX + pad) - x0 + 1;
+  const ch = Math.min(h - 1, maxY + pad) - y0 + 1;
+
+  const out = document.createElement('canvas');
+  out.width = cw; out.height = ch;
+  out.getContext('2d').drawImage(c, x0, y0, cw, ch, 0, 0, cw, ch);
+
+  let head = null;
+  if (headBox){
+    const hy0 = headBox.y0 * h, hy1 = headBox.y1 * h;
+    head = {
+      headX: (headBox.cx * w - x0) / cw,
+      headY: ((hy0 + hy1) / 2 - y0) / ch,
+      headH: (hy1 - hy0) / ch
+    };
+  }
+  return { cv: out, head };
+}
+
 /* авто-поиск головы на вырезанной фигуре: ширина силуэта по строкам,
    голова — от макушки до резкого расширения (плечи) */
 function detectHead(c){
@@ -629,14 +887,27 @@ const customKey = g => 'aura_photo_' + g;
 
 async function buildCustomPerson(g, dataURL, onStage){
   const stage = async t => {
-    if (onStage){ onStage(t); await new Promise(r => setTimeout(r, 80)); }
+    if (onStage){ onStage(t); await new Promise(r => setTimeout(r, 90)); }
   };
   await stage('Загружаем фото…');
   const img = await loadImage(dataURL);
-  await stage('Убираем фон…');
-  const cut = cutBackground(img, false);
-  await stage('Ищем голову…');
-  const head = detectHead(cut);
+
+  let cut = null, head = null;
+  try {
+    await stage('Готовим нейросеть…');
+    const ai = await cutBackgroundAI(img, stage);
+    cut = ai.cv;
+    head = ai.head;
+  } catch (e){
+    console.warn('Нейросеть недоступна — вырезаем фон обычным способом', e);
+    await stage('Убираем фон…');
+    cut = cutBackground(img, false);
+  }
+
+  if (!head){
+    await stage('Ищем голову…');
+    head = detectHead(cut);
+  }
   await stage('Собираем видео-аватар…');
   persons[g] = {
     cv: cut, w: cut.width, h: cut.height,
@@ -801,6 +1072,129 @@ function analyzeText(text){
     .slice(0, 90);
 }
 
+/* ---------- ИИ-генератор облака по промту ---------- */
+
+const THEMES = {
+  business: {
+    k: ['бизнес','стартап','работ','карьер','предприн','продаж','маркет','проект','компан','успех','деньг','руковод','менедж','цел','business','startup','work','career','ceo'],
+    w: ['стартап','питчинг','инвесторы','метрики','рост','сделка','переговоры','стратегия','команда','лидерство','дедлайн','планёрка','прибыль','масштаб','нетворкинг','визия','результат','фокус','система','делегирование','капитал','презентация','амбиции']
+  },
+  sport: {
+    k: ['спорт','трениров','бег','зал','качал','фитнес','футбол','плаван','вело','здоров','бокс','ммa','йог','gym','sport','fit','run'],
+    w: ['тренировка','дисциплина','выносливость','режим','кардио','сила','рекорд','марафон','восстановление','растяжка','пульс','характер','драйв','победа','техника','энергия','движение','форма','заряд','адреналин']
+  },
+  travel: {
+    k: ['путешеств','тревел','стран','мор','гор','остров','отпуск','бали','азия','поездк','мир','travel','trip'],
+    w: ['маршрут','чемодан','паспорт','перелёт','закат','океан','острова','джунгли','сёрфинг','кемпинг','билеты','карта','приключение','свобода','рассвет','пляж','дорога','открытия','культура','языки','вид из окна']
+  },
+  music: {
+    k: ['музык','гитар','песн','концерт','трек','вокал','диджей','пою','пой','music','dj','sing'],
+    w: ['мелодия','ритм','бит','студия','вокал','аккорды','плейлист','концерт','сцена','звук','гармония','импровизация','припев','вайб','наушники','винил','фестиваль','танец','волна','соло']
+  },
+  art: {
+    k: ['твор','искусств','рисова','рису','худож','дизайн','фото','кино','поэ','пишу','писат','арт','креатив','art','design','creat'],
+    w: ['вдохновение','эскиз','палитра','композиция','свет','тень','кадр','сюжет','образ','деталь','форма','текстура','галерея','выставка','взгляд','идея','набросок','цвет','линия','перспектива','эстетика']
+  },
+  beauty: {
+    k: ['мод','стил','бьюти','макияж','красот','одежд','шопинг','fashion','beauty','style'],
+    w: ['стиль','образ','аутфит','капсула','тренд','подиум','силуэт','акцент','палетка','уход','сияние','локоны','аромат','парфюм','каблуки','зеркало','примерка','лук','элегантность','шик']
+  },
+  food: {
+    k: ['еда','кулинар','готовл','рецепт','кофе','ресторан','фуди','вкус','повар','food','cook','chef'],
+    w: ['рецепты','специи','вкус','аромат','бранч','десерт','эспрессо','матча','сезонность','гриль','паста','выпечка','сервировка','дегустация','умами','текстура','подача','кухня','эксперимент','наслаждение']
+  },
+  love: {
+    k: ['любов','семь','дет','отношен','свадьб','дом','муж','жен','мама','папа','реб','love','family'],
+    w: ['семья','объятия','забота','доверие','традиции','дом','уют','прогулки','смех','поддержка','нежность','свидание','романтика','подарки','воспоминания','тепло','близость','счастье','любовь']
+  },
+  tech: {
+    k: ['код','программ','айти','разработ','нейросет','технолог','гаджет','компьютер','it','code','dev','ai','tech'],
+    w: ['код','деплой','релиз','фича','алгоритм','нейросеть','промпт','данные','сервер','опенсорс','стек','рефакторинг','архитектура','автоматизация','терминал','коммит','апдейт','инновации','продукт','логика']
+  },
+  crypto: {
+    k: ['крипт','биткоин','инвест','трейд','финанс','акци','капитал','crypto','btc','invest','trading'],
+    w: ['биткоин','эфириум','блокчейн','портфель','диверсификация','трейдинг','стейкинг','альткоины','волатильность','капитал','актив','стратегия','риск','профит','свобода','цифры','анализ','тренд']
+  },
+  blog: {
+    k: ['блог','контент','соцсет','инста','тикток','ютуб','подписч','сторис','смм','влог','blog','content'],
+    w: ['контент','сторис','рилс','подписчики','охваты','коллаборация','монтаж','сценарий','харизма','вовлечение','комьюнити','эфир','узнаваемость','вирусность','голос','история','искренность','влияние']
+  },
+  nature: {
+    k: ['природ','лес','океан','тишин','гармон','эко','поход','nature'],
+    w: ['тишина','лес','рассвет','океан','дыхание','простор','тропа','костёр','звёзды','гармония','босиком','воздух','травы','волны','птицы','свежесть','созерцание','покой']
+  },
+  spirit: {
+    k: ['дух','медита','осознан','энерг','практик','баланс','саморазвит','психолог','ментал','смысл','spirit','mind','yoga','zen'],
+    w: ['осознанность','медитация','дыхание','практика','энергия','намерение','благодарность','поток','баланс','интуиция','рост','путь','ритуал','присутствие','принятие','лёгкость','смысл','глубина','свет']
+  },
+  study: {
+    k: ['учеб','учу','учус','знан','книг','курс','образован','наук','язык','студент','study','learn','book'],
+    w: ['книги','конспект','курс','лекция','инсайт','знания','языки','наставник','вопросы','гипотеза','исследование','заметки','библиотека','подкаст','структура','любопытство','навык','рост']
+  },
+  party: {
+    k: ['вечерин','тус','движ','клуб','танц','праздник','друз','party','dance'],
+    w: ['вечеринка','танцпол','диджей','неон','друзья','тосты','смех','полночь','плейлист','дресс-код','вспышки','движ','энергия','знакомства','истории','конфетти','бит','настроение']
+  },
+  auto: {
+    k: ['машин','тачк','авто','мото','дрифт','гонк','байк','car','moto','drive'],
+    w: ['тачка','движок','дрифт','трасса','тюнинг','гараж','поворот','скорость','асфальт','ночной город','фары','руль','механика','заезд','адреналин','рёв мотора']
+  }
+};
+
+function generateFromPrompt(prompt){
+  const tokens = (prompt.toLowerCase().replace(/ё/g, 'е').match(/[a-zа-я][a-zа-я\-']*/g) || [])
+    .filter(t => t.length >= 3 && !STOPWORDS.has(t));
+
+  // счёт тем по совпадению основ
+  const scores = new Map();
+  for (const [name, th] of Object.entries(THEMES)){
+    let s = 0;
+    for (const t of tokens){
+      for (const key of th.k){
+        if (t.startsWith(key)){ s += 2; break; }
+      }
+      if (th.w.includes(t)) s += 1;
+    }
+    if (s > 0) scores.set(name, s);
+  }
+  let picked = [...scores.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]);
+  if (!picked.length){
+    const names = Object.keys(THEMES);
+    while (picked.length < 3){
+      const n2 = names[(Math.random() * names.length) | 0];
+      if (!picked.includes(n2)) picked.push(n2);
+    }
+  }
+
+  const items = new Map(); // word -> weight
+  const put = (w, wt) => { if (!items.has(w) || items.get(w) < wt) items.set(w, wt); };
+
+  // слова из самого промта — самые весомые
+  tokens.slice(0, 8).forEach(t => put(t, 10));
+
+  const shares = [1, 0.7, 0.45];
+  picked.forEach((name, pi) => {
+    const bank = THEMES[name].w.slice();
+    for (let i = bank.length - 1; i > 0; i--){
+      const j = (Math.random() * (i + 1)) | 0;
+      [bank[i], bank[j]] = [bank[j], bank[i]];
+    }
+    const take = Math.round(bank.length * shares[pi]);
+    bank.slice(0, take).forEach(w =>
+      put(w, (3 - pi) + Math.random() * 3));
+  });
+
+  // немного общего «соцсетевого» фона
+  const common = COMMON_WORDS.slice();
+  for (let i = 0; i < 14; i++)
+    put(common[(Math.random() * common.length) | 0], 1 + Math.random());
+
+  return [...items.entries()]
+    .map(([word, weight]) => ({ word, weight }))
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 130);
+}
+
 /* список тегов или связный текст? Если текст — анализируем. */
 function getCloudWords(text){
   const commaParts = text.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
@@ -912,11 +1306,16 @@ function buildParticles(words, weights = null){
 
 const currentGender = () => (genderTarget > 0.5 ? 'f' : 'm');
 
+// слова и веса хранятся отдельно для мужчины и для женщины
+const userWords   = { m: '', f: '' };
+const userWeights = { m: null, f: null };
+
 /* показать либо слова/темы пользователя, либо дефолтное облако текущего пола */
 function refreshCloud(){
-  const { words, weights } = getCloudWords(input.value);
-  if (words.length) buildParticles(words, weights);
-  else buildParticles(DEFAULTS[currentGender()]);
+  const g = currentGender();
+  const { words, weights } = getCloudWords(userWords[g] || '');
+  if (words.length) buildParticles(words, userWeights[g] || weights);
+  else buildParticles(DEFAULTS[g]);
 }
 
 /* ---------- кэш спрайтов слов ---------- */
@@ -1145,13 +1544,19 @@ toggle.addEventListener('click', e => {
   const btn = e.target.closest('button[data-g]');
   if (!btn) return;
   const g = btn.dataset.g;
+  if (g === currentGender()) return;
+
+  userWords[currentGender()] = input.value; // запоминаем облако прежнего пола
   genderTarget = g === 'f' ? 1 : 0;
   toggle.classList.toggle('f', g === 'f');
   toggle.querySelectorAll('button').forEach(b =>
     b.classList.toggle('active', b === btn));
   localStorage.setItem(LS_GENDER, g);
+
+  input.value = userWords[g] || '';        // и подставляем облако нового
+  updateCounter();
   updateMissingHint();
-  refreshCloud(); // без своих слов у каждого пола — своё дефолтное облако
+  refreshCloud();
   updatePhotoReset();
 });
 
@@ -1172,13 +1577,54 @@ function updateCounter(){
 
 let debounceId = 0;
 input.addEventListener('input', () => {
+  const g = currentGender();
+  userWords[g] = input.value;
+  userWeights[g] = null; // ручное редактирование сбрасывает веса ИИ
   updateCounter();
   clearTimeout(debounceId);
   debounceId = setTimeout(refreshCloud, 130);
 });
 
+/* --- ИИ-облако по промту --- */
+const aiBtn        = document.getElementById('aiBtn');
+const aiStatus     = document.getElementById('aiStatus');
+const aiStatusText = document.getElementById('aiStatusText');
+
+function setAiStage(text){
+  aiBtn.style.display    = text ? 'none' : '';
+  aiStatus.style.display = text ? 'flex' : 'none';
+  aiStatusText.textContent = text || '';
+}
+const aiPause = ms => new Promise(r => setTimeout(r, ms));
+
+aiBtn.addEventListener('click', async () => {
+  const prompt = input.value.trim();
+  if (!prompt){
+    counter.textContent = 'сначала опишите себя парой слов';
+    input.focus();
+    return;
+  }
+  setAiStage('Читаем ваш промт…');   await aiPause(550);
+  setAiStage('Угадываем темы…');     await aiPause(600);
+  const items = generateFromPrompt(prompt);
+  setAiStage('Собираем облако…');    await aiPause(450);
+
+  const g = currentGender();
+  userWeights[g] = new Map(items.map(i => [i.word, i.weight]));
+  input.value = items.map(i => i.word).join(', ');
+  userWords[g] = input.value;
+  buildParticles(items.map(i => i.word), userWeights[g]);
+  const n = items.length;
+  counter.textContent = `ИИ: ${n} ${plural(n)}`;
+  setAiStage(null);
+});
+
 resetBtn.addEventListener('click', () => {
+  const g = currentGender();
   input.value = '';
+  userWords[g] = '';
+  userWeights[g] = null;
+  localStorage.removeItem(wordsKey(g));
   updateCounter();
   refreshCloud();
   input.focus();
@@ -1239,9 +1685,11 @@ scrim.addEventListener('click', closePanel);
 window.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
 
 saveBtn.addEventListener('click', () => {
+  const g = currentGender();
+  userWords[g] = input.value;
   const { words } = getCloudWords(input.value);
-  if (words.length) localStorage.setItem(LS_WORDS, input.value.trim());
-  else localStorage.removeItem(LS_WORDS);
+  if (words.length) localStorage.setItem(wordsKey(g), input.value.trim());
+  else localStorage.removeItem(wordsKey(g));
   refreshCloud();
   closePanel();
 });
@@ -1258,8 +1706,18 @@ if (savedGender === 'f'){
     b.classList.toggle('active', b.dataset.g === 'f'));
 }
 
-const savedWords = localStorage.getItem(LS_WORDS) || '';
-if (savedWords) input.value = savedWords;
+const legacyWords = localStorage.getItem(LS_WORDS);
+for (const g of ['m', 'f']){
+  let saved = localStorage.getItem(wordsKey(g));
+  if (saved == null && legacyWords){    // переносим старое общее облако
+    saved = legacyWords;
+    localStorage.setItem(wordsKey(g), saved);
+  }
+  userWords[g] = saved || '';
+}
+if (legacyWords) localStorage.removeItem(LS_WORDS);
+
+input.value = userWords[currentGender()];
 updateCounter();
 refreshCloud();
 updatePhotoReset();
