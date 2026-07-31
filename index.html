@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ЧЕМ ДУХ НАПОЛНЕН — содержание духа из ваших слов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000;
+    --ink:#f5f4f0;
+    --gold:#e6cf9a;
+    --panel-r:28px;
+    --font:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",Arial,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  canvas.layer{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+  /* ---------- brand ---------- */
+  .brand{
+    position:fixed;top:28px;left:32px;z-index:5;
+    user-select:none;pointer-events:none;
+  }
+  .brand span{
+    display:block;
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:19px;font-weight:600;letter-spacing:.24em;
+    color:var(--ink);
+  }
+  .brand em{
+    display:block;margin-top:6px;
+    font-style:normal;font-size:11px;font-weight:300;
+    letter-spacing:.18em;text-transform:uppercase;
+    color:rgba(245,244,240,.38);
+  }
+
+  /* ---------- gender toggle ---------- */
+  .toggle{
+    position:fixed;left:50%;bottom:36px;transform:translateX(-50%);
+    z-index:5;display:flex;overflow:hidden;
+    background:linear-gradient(150deg,rgba(255,255,255,.12),rgba(255,255,255,.03) 65%);
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:999px;padding:4px;
+    backdrop-filter:blur(26px) saturate(1.8);
+    -webkit-backdrop-filter:blur(26px) saturate(1.8);
+    box-shadow:0 8px 40px rgba(0,0,0,.6),
+               inset 0 1px 0 rgba(255,255,255,.26),
+               inset 0 -1px 1px rgba(255,255,255,.05);
+  }
+  .toggle::after{
+    content:'';position:absolute;inset:0;border-radius:inherit;
+    background:radial-gradient(130% 90% at 25% 0%,rgba(255,255,255,.18),rgba(255,255,255,0) 55%);
+    pointer-events:none;
+  }
+  .toggle .thumb{
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.28);
+  }
+  .toggle .thumb{
+    position:absolute;top:4px;left:4px;
+    width:calc(50% - 4px);height:calc(100% - 8px);
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:999px;
+    transition:transform .45s cubic-bezier(.22,.9,.24,1);
+    pointer-events:none;
+  }
+  .toggle.f .thumb{transform:translateX(100%)}
+  .toggle button{
+    position:relative;z-index:1;
+    appearance:none;border:0;background:none;cursor:pointer;
+    font-family:var(--font);font-size:12.5px;font-weight:400;
+    letter-spacing:.14em;text-transform:uppercase;
+    color:rgba(245,244,240,.45);
+    padding:10px 26px;border-radius:999px;
+    transition:color .35s;
+    white-space:nowrap;
+  }
+  .toggle button.active{color:var(--ink)}
+
+  /* ---------- fab (свернутая панель) ---------- */
+  #fab{
+    position:fixed;right:32px;bottom:32px;z-index:6;
+    width:48px;height:48px;border-radius:50%;
+    appearance:none;cursor:pointer;overflow:hidden;
+    background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.04) 60%);
+    border:1px solid rgba(255,255,255,.24);
+    color:rgba(245,244,240,.8);
+    backdrop-filter:blur(26px) saturate(1.8);
+    -webkit-backdrop-filter:blur(26px) saturate(1.8);
+    box-shadow:0 10px 34px rgba(0,0,0,.55),
+               inset 0 1px 0 rgba(255,255,255,.32),
+               inset 0 -1px 1px rgba(255,255,255,.06);
+    display:flex;align-items:center;justify-content:center;
+    transition:box-shadow .3s,border-color .3s,transform .35s cubic-bezier(.22,.9,.24,1),opacity .3s;
+    opacity:.6;
+  }
+  #fab::before{
+    content:'';position:absolute;inset:0;border-radius:inherit;
+    background:radial-gradient(120% 85% at 30% 0%,rgba(255,255,255,.34),rgba(255,255,255,0) 55%);
+    pointer-events:none;
+  }
+  #fab:hover{
+    opacity:1;transform:scale(1.08);
+    border-color:rgba(255,255,255,.38);
+    box-shadow:0 14px 44px rgba(0,0,0,.6),
+               inset 0 1px 0 rgba(255,255,255,.42),
+               inset 0 -1px 1px rgba(255,255,255,.08);
+  }
+  #fab:active{transform:scale(.96)}
+  #fab svg{width:18px;height:18px;display:block}
+  #fab.hidden{opacity:0;pointer-events:none;transform:scale(.4)}
+
+  /* ---------- panel ---------- */
+  .scrim{
+    position:fixed;inset:0;z-index:7;
+    background:rgba(0,0,0,.45);
+    opacity:0;pointer-events:none;
+    transition:opacity .45s;
+  }
+  .scrim.on{opacity:1;pointer-events:auto}
+  .panel-wrap{
+    position:fixed;inset:0;z-index:8;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;
+    padding:24px;
+  }
+  .panel{
+    pointer-events:auto;
+    position:relative;overflow:hidden;
+    width:min(480px,100%);
+    background:linear-gradient(165deg,rgba(255,255,255,.10),rgba(255,255,255,.03) 28%,rgba(14,14,17,.68) 100%);
+    border:1px solid rgba(255,255,255,.17);
+    border-radius:var(--panel-r);
+    backdrop-filter:blur(42px) saturate(1.7);
+    -webkit-backdrop-filter:blur(42px) saturate(1.7);
+    box-shadow:0 30px 90px rgba(0,0,0,.75),
+               inset 0 1px 0 rgba(255,255,255,.24),
+               inset 0 -1px 0 rgba(255,255,255,.04);
+    padding:34px 34px 30px;
+    display:none;
+    will-change:transform;
+  }
+  .panel::before{
+    content:'';position:absolute;inset:0;border-radius:inherit;
+    background:radial-gradient(140% 55% at 18% -6%,rgba(255,255,255,.15),rgba(255,255,255,0) 55%);
+    pointer-events:none;
+  }
+  .panel.visible{display:block}
+  .panel h2{
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:21px;font-weight:500;letter-spacing:.06em;
+  }
+  .panel p{
+    margin-top:10px;
+    font-size:12.5px;font-weight:300;line-height:1.65;
+    color:rgba(245,244,240,.45);
+    letter-spacing:.03em;
+  }
+  .panel textarea{
+    margin-top:20px;width:100%;
+    min-height:130px;resize:vertical;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:16px;
+    color:var(--ink);
+    font-family:var(--font);font-size:14px;font-weight:300;line-height:1.7;
+    letter-spacing:.02em;
+    padding:16px 18px;
+    outline:none;
+    transition:border-color .3s,background .3s;
+    caret-color:var(--gold);
+  }
+  .panel textarea::placeholder{color:rgba(245,244,240,.25)}
+  .panel textarea:focus{
+    border-color:rgba(230,207,154,.45);
+    background:rgba(255,255,255,.06);
+  }
+  .panel .meta{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-top:12px;
+  }
+  .panel .meta span{
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:rgba(245,244,240,.35);font-weight:300;
+  }
+  .panel .ghost{
+    appearance:none;background:none;border:0;cursor:pointer;
+    font-family:var(--font);font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;font-weight:300;
+    color:rgba(245,244,240,.35);
+    border-bottom:1px solid transparent;
+    padding:2px 0;
+    transition:color .3s;
+  }
+  .panel .ghost:hover{color:rgba(230,207,154,.85)}
+  .upload{
+    margin-top:18px;padding-top:18px;
+    border-top:1px solid rgba(255,255,255,.07);
+  }
+  #photoBtn{
+    width:100%;appearance:none;cursor:pointer;
+    background:none;
+    border:1px dashed rgba(230,207,154,.35);
+    color:rgba(230,207,154,.85);
+    border-radius:14px;padding:13px;
+    font-family:var(--font);font-size:11.5px;font-weight:400;
+    letter-spacing:.16em;text-transform:uppercase;
+    transition:border-color .3s,background .3s;
+  }
+  #photoBtn:hover{
+    border-color:rgba(230,207,154,.7);
+    background:rgba(230,207,154,.06);
+  }
+  .upload-instr{
+    margin-bottom:14px;
+    padding:14px 16px;
+    border:1px solid rgba(230,207,154,.4);
+    border-radius:14px;
+    background:rgba(230,207,154,.07);
+    font-size:13px;font-weight:300;line-height:1.7;
+    color:rgba(245,244,240,.85);letter-spacing:.02em;
+  }
+  .upload-instr i{
+    display:block;margin-bottom:6px;
+    font-style:normal;font-size:10.5px;font-weight:600;
+    letter-spacing:.22em;text-transform:uppercase;
+    color:var(--gold);
+  }
+  .upload-instr b{color:var(--gold);font-weight:600}
+  #photoStatus{
+    display:none;align-items:center;gap:11px;
+    margin-top:2px;padding:13px 4px;
+  }
+  #photoStatus span{
+    font-size:12.5px;font-weight:300;letter-spacing:.06em;
+    color:rgba(245,244,240,.75);
+  }
+  .spinner{
+    width:16px;height:16px;flex:none;
+    border:2px solid rgba(230,207,154,.22);
+    border-top-color:rgba(230,207,154,.9);
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(1turn)}}
+  #photoReset{margin-top:8px}
+  #saveBtn{
+    margin-top:24px;width:100%;
+    appearance:none;border:0;cursor:pointer;
+    background:var(--ink);
+    color:#0a0a0a;
+    font-family:var(--font);font-size:13px;font-weight:600;
+    letter-spacing:.22em;text-transform:uppercase;
+    padding:17px;border-radius:16px;
+    transition:transform .25s,box-shadow .25s,background .25s;
+  }
+  #saveBtn:hover{
+    transform:translateY(-1px);
+    background:#fff;
+    box-shadow:0 12px 40px rgba(255,255,255,.12);
+  }
+  #saveBtn:active{transform:translateY(0)}
+
+  /* подсказка, если фото не найдено */
+  .missing{
+    position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+    z-index:4;max-width:420px;text-align:center;
+    font-size:12.5px;font-weight:300;line-height:1.8;
+    color:rgba(245,244,240,.4);letter-spacing:.04em;
+    display:none;pointer-events:none;
+  }
+  .missing code{
+    color:rgba(230,207,154,.8);
+    font-family:ui-monospace,Menlo,monospace;font-size:12px;
+  }
+
+  @media (max-width:600px){
+    .brand{left:20px;top:18px}
+    .brand span{font-size:14px;letter-spacing:.16em}
+    .brand em{font-size:9.5px;margin-top:4px}
+    .toggle{bottom:18px;padding:3px}
+    .toggle button{font-size:10.5px;padding:8px 16px;letter-spacing:.12em}
+    #fab{width:40px;height:40px;right:14px;bottom:72px}
+    #fab svg{width:14px;height:14px}
+    .panel{padding:24px 20px 20px}
+    .panel h2{font-size:18px}
+    .panel textarea{min-height:100px;font-size:13px}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="back"   class="layer"></canvas>
+<canvas id="person" class="layer"></canvas>
+<canvas id="front"  class="layer"></canvas>
+
+<div class="brand">
+  <span>ЧЕМ ДУХ НАПОЛНЕН</span>
+  <em>содержание духа из ваших слов</em>
+</div>
+
+<div class="missing" id="missing">
+  Положите фото в папку проекта:<br>
+  <code>man.jpg</code> — мужчина, <code>woman.jpg</code> — женщина.<br>
+  Фон фотографии будет убран автоматически.
+</div>
+
+<div class="toggle" id="genderToggle">
+  <div class="thumb"></div>
+  <button data-g="m" class="active">Мужчина</button>
+  <button data-g="f">Женщина</button>
+</div>
+
+<button id="fab" aria-label="Изменить облако" title="Изменить облако">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <path d="M12 5v14M5 12h14"/>
+  </svg>
+</button>
+
+<div class="scrim" id="scrim"></div>
+<div class="panel-wrap">
+  <div class="panel" id="panel">
+    <h2>Ваше облако тегов</h2>
+    <p>Введите слова через запятую — или вставьте целый текст (пост, заметку,
+       страницу дневника): мы проанализируем его и соберём облако из ваших
+       главных тем. Облако меняется прямо во время набора.</p>
+    <textarea id="wordsInput" spellcheck="false"
+      placeholder="кофе, стартап, музыка, тревел, сторис…"></textarea>
+    <div class="meta">
+      <span id="wordCount">0 слов</span>
+      <button class="ghost" id="resetBtn">сбросить</button>
+    </div>
+    <div class="upload">
+      <div class="upload-instr">
+        <i>Важно — прочитайте перед загрузкой</i>
+        Фото должно быть <b>в полный рост или по пояс</b>, лицом к камере,
+        на однотонном фоне. Из него соберётся ваш видео-аватар.
+      </div>
+      <button id="photoBtn">Загрузить своё фото</button>
+      <input type="file" id="photoInput" accept="image/*" hidden>
+      <div id="photoStatus"><div class="spinner"></div><span id="photoStatusText"></span></div>
+      <button class="ghost" id="photoReset" style="display:none">вернуть стандартное фото</button>
+    </div>
+    <button id="saveBtn">Сохранить</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ============================== настройки персонажей ==============================
+   src    — файл рядом с index.html; PNG с прозрачностью (precut: true) или
+            фото на однородном фоне (фон будет удалён заливкой от краёв)
+   headX  — центр головы по X, доля ширины кадра (0..1)
+   headY  — центр головы по Y, доля высоты кадра (0..1)
+   headH  — высота головы, доля высоты кадра — от неё считается размер облака
+=================================================================================== */
+const PEOPLE = {
+  m: { src: 'man.png',   precut: true, scale: 0.94, headX: 0.490, headY: 0.110, headH: 0.180 },
+  f: { src: 'woman.png', precut: true, scale: 0.94, headX: 0.513, headY: 0.116, headH: 0.218 }
+};
+
+const COMMON_WORDS = [
+  'лайк','репост','сторис','рилс','шортс','подписчики','хайп','тренд',
+  'вирусный','контент','блогер','лента','алгоритм','охваты','движ','вайб',
+  'мем','флекс','чилл','пост','аватар','реклама','коллаб','челлендж','хэштег',
+  'эфир','подкаст','плейлист','свайп','скролл','думскроллинг','онлайн',
+  'оффлайн','нейросеть','промпт','бот','пуш','уведомление','музыка','трек',
+  'тикток','инста','телега','ютуб','стикер','эмодзи','реакция','войс',
+  'кружок','созвон','апдейт','лайфхак','гайд','обзор','влог','эстетика',
+  'дофамин','детокс','фокус','баланс','кофе','тревел','вишлист','подписка',
+  'премиум','селфи','фильтр','монетизация','личный бренд','дедлайн',
+  'like','follow','share','viral','live','story','feed','DM','hype','mood',
+  'vibe','digital','online','AI','trend','reels','stream','update','swipe',
+  'аккаунт','профиль','никнейм','комьюнити','аудитория','просмотры','репосты',
+  'сториз','флешмоб','розыгрыш','гив','хейтеры','фанаты','буст','чарты','дуэт',
+  'галочка','верификация','упоминания','закладки','подборка','каруселька',
+  'прямой эфир','взаимность','активность','движение','инсайт','цитата'
+];
+
+const DEFAULTS = {
+  m: [...COMMON_WORDS,
+    'футбол','матч','лига','тачка','дрифт','гараж','мотор','качалка','жим',
+    'протеин','кроссфит','бокс','ммa','барбершоп','борода','крипта','биткоин',
+    'трейдинг','инвестиции','стартап','бизнес','сделка','покер','киберспорт',
+    'дота','шутер','гейминг','стрим','донат','тактика','рейтинг','харды',
+    'айти','код','сервер','гаджет','техно','кроссовки','сникерхед','часы',
+    'виски','гриль','шашлык','рыбалка','поход','сноуборд','мотоцикл','дерби',
+    'пацаны','движуха','респект','базар','кэш','грайнд','хастл','победа',
+    'фифа','плойка','ставки','тотал','тренер','масса','сушка','байк','картинг',
+    'линукс','гонки','тюнинг','кальян','стейк','турник','штанга','пресс'
+  ],
+  f: [...COMMON_WORDS,
+    'бьюти','макияж','помада','тушь','скинкеа','уход','сыворотка','глоу',
+    'маникюр','брови','ресницы','локоны','шопинг','мода','стиль','аутфит',
+    'лук','капсула','каблуки','сумка','парфюм','ароматы','пилатес','йога',
+    'растяжка','спа','массаж','бранч','латте','матча','десерт','цветы',
+    'пионы','свечи','интерьер','уют','плед','сериал','дорама','романтика',
+    'астрология','таро','аффирмации','дневник','подружки','вайны','сплетни',
+    'глиттер','блёстки','зеркало','фотосессия','позы','образ','мудборд',
+    'софт','нежность','баловство','мечты','цветение','сияние',
+    'хайлайтер','консилер','палетка','укладка','гель-лак','шёлк','букет',
+    'свидание','девичник','смузи','авокадо','пикник','закат','вдохновение'
+  ]
+};
+
+const LS_WORDS  = 'aura_words';
+const LS_GENDER = 'aura_gender';
+
+/* ============================== канвасы ============================== */
+
+const backCv   = document.getElementById('back');
+const personCv = document.getElementById('person');
+const frontCv  = document.getElementById('front');
+const bctx = backCv.getContext('2d');
+const pctx = personCv.getContext('2d');
+const fctx = frontCv.getContext('2d');
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+const FONT = '-apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",Arial,sans-serif';
+
+let W = 0, H = 0;
+
+function resize(){
+  W = window.innerWidth; H = window.innerHeight;
+  for (const [cv, ctx] of [[backCv,bctx],[personCv,pctx],[frontCv,fctx]]){
+    cv.width  = Math.round(W * DPR);
+    cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  personDirty = true;
+}
+window.addEventListener('resize', resize);
+
+// при смене размера окна пересобираем облако под новую плотность
+let resizeRebuildId = 0;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeRebuildId);
+  resizeRebuildId = setTimeout(() => refreshCloud(), 300);
+});
+
+/* ============================== фото: загрузка и вырезание фона ============================== */
+
+const persons = { m: null, f: null }; // {cv, w, h, cfg}
+let personDirty = true;
+
+function loadImage(src){
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => res(img);
+    img.onerror = rej;
+    img.src = src;
+  });
+}
+
+/* Подготовка фигуры.
+   precut = true: PNG уже с прозрачностью — только мягкий край и цветокоррекция.
+   Иначе фон удаляется заливкой от краёв кадра по цветовому сходству. */
+function cutBackground(img, precut){
+  const maxH = 1300;
+  const k = Math.min(1, maxH / img.naturalHeight);
+  const w = Math.max(1, Math.round(img.naturalWidth * k));
+  const h = Math.max(1, Math.round(img.naturalHeight * k));
+
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const cx = c.getContext('2d', { willReadFrequently: true });
+  cx.drawImage(img, 0, 0, w, h);
+
+  const id = cx.getImageData(0, 0, w, h);
+  const d = id.data;
+
+  const mask = new Uint8Array(w * h); // 1 = фон
+  if (precut){
+    for (let p = 0; p < w * h; p++) if (d[p * 4 + 3] < 128) mask[p] = 1;
+  } else {
+    // фон может быть разноцветным (градиенты, неон) — собираем по рамке кадра
+    // до 4 доминирующих цветовых кластеров и сравниваем с каждым
+    const border = [];
+    for (let x = 0; x < w; x++){ border.push(x, (h - 1) * w + x); }
+    for (let y = 0; y < h; y++){ border.push(y * w, y * w + w - 1); }
+
+    const bins = new Map();
+    for (const p of border){
+      const i = p * 4;
+      const key = (d[i] >> 5) + ',' + (d[i + 1] >> 5) + ',' + (d[i + 2] >> 5);
+      let b2 = bins.get(key);
+      if (!b2){ b2 = { r: 0, g: 0, b: 0, n: 0 }; bins.set(key, b2); }
+      b2.r += d[i]; b2.g += d[i + 1]; b2.b += d[i + 2]; b2.n++;
+    }
+    const clusters = [...bins.values()]
+      .filter(c => c.n >= border.length * 0.04)
+      .sort((a, b) => b.n - a.n)
+      .slice(0, 4)
+      .map((c, idx) => {
+        const r = c.r / c.n, g = c.g / c.n, b = c.b / c.n;
+        const norm = Math.hypot(r, g, b) || 1;
+        return { ur: r / norm, ug: g / norm, ub: b / norm, norm, thr: 0.985 };
+      });
+
+    const isBg = i => {
+      const r = d[i], g = d[i + 1], b = d[i + 2];
+      const L = Math.hypot(r, g, b) || 1;
+      for (const c of clusters){
+        if (L < 30 && c.norm < 40) return true; // почти чёрное на почти чёрном
+        if ((r * c.ur + g * c.ug + b * c.ub) / L > c.thr) return true;
+      }
+      return false;
+    };
+
+    // flood fill от краёв
+    const queue = new Int32Array(w * h);
+    let qt = 0;
+    const push = p => {
+      if (!mask[p] && isBg(p * 4)){ mask[p] = 1; queue[qt++] = p; }
+    };
+    for (const p of border) push(p);
+    let qh = 0;
+    while (qh < qt){
+      const p = queue[qh++];
+      const x = p % w, y = (p / w) | 0;
+      if (x > 0)     push(p - 1);
+      if (x < w - 1) push(p + 1);
+      if (y > 0)     push(p - w);
+      if (y < h - 1) push(p + w);
+    }
+  }
+
+  // альфа-карта: эрозия 1px + размытие для мягкого края
+  let a = new Float32Array(w * h);
+  for (let p = 0; p < w * h; p++) a[p] = mask[p] ? 0 : 255;
+  const eroded = new Float32Array(a);
+  for (let y = 1; y < h - 1; y++){
+    for (let x = 1; x < w - 1; x++){
+      const p = y * w + x;
+      if (a[p] > 0 && (a[p-1]===0 || a[p+1]===0 || a[p-w]===0 || a[p+w]===0))
+        eroded[p] = 60;
+    }
+  }
+  a = eroded;
+  // два прохода box-blur 3x3
+  for (let pass = 0; pass < 2; pass++){
+    const b2 = new Float32Array(w * h);
+    for (let y = 1; y < h - 1; y++){
+      for (let x = 1; x < w - 1; x++){
+        const p = y * w + x;
+        b2[p] = (a[p] + a[p-1] + a[p+1] + a[p-w] + a[p+w]
+               + a[p-w-1] + a[p-w+1] + a[p+w-1] + a[p+w+1]) / 9;
+      }
+    }
+    a = b2;
+  }
+
+  // применяем альфу + убираем цветовой ореол + благородная цветокоррекция
+  const DESAT = 0.30, EXPOSURE = 0.86;
+  for (let p = 0; p < w * h; p++){
+    const i = p * 4;
+    const alpha = a[p];
+    d[i + 3] = alpha;
+    if (alpha === 0) continue;
+    let r = d[i], g = d[i + 1], b = d[i + 2];
+    if (alpha < 250){
+      const cap = Math.max(g, b) * 1.3;
+      if (r > cap) r = cap;
+    }
+    const l = 0.299 * r + 0.587 * g + 0.114 * b;
+    r = (r * (1 - DESAT) + l * DESAT) * EXPOSURE;
+    g = (g * (1 - DESAT) + l * DESAT) * EXPOSURE;
+    b = (b * (1 - DESAT) + l * DESAT) * EXPOSURE;
+    d[i] = r; d[i + 1] = g; d[i + 2] = b;
+  }
+  cx.putImageData(id, 0, 0);
+  return c;
+}
+
+/* авто-поиск головы на вырезанной фигуре: ширина силуэта по строкам,
+   голова — от макушки до резкого расширения (плечи) */
+function detectHead(c){
+  const w = c.width, h = c.height;
+  const d = c.getContext('2d').getImageData(0, 0, w, h).data;
+  const widths = new Int32Array(h), centers = new Float32Array(h);
+  for (let y = 0; y < h; y++){
+    let l = -1, r = -1;
+    for (let x = 0; x < w; x++)
+      if (d[(y * w + x) * 4 + 3] > 128){ if (l < 0) l = x; r = x; }
+    widths[y] = r >= l && l >= 0 ? r - l + 1 : 0;
+    centers[y] = l >= 0 ? (l + r) / 2 : w / 2;
+  }
+  let y0 = 0;
+  while (y0 < h - 1 && widths[y0] < w * 0.03) y0++;
+
+  // опорная ширина головы — минимум в верхней зоне (без единичных выбросов)
+  let w0 = Infinity;
+  const probeA = y0 + Math.round(h * 0.015), probeB = Math.min(h - 1, y0 + Math.round(h * 0.12));
+  for (let y = probeA; y <= probeB; y++)
+    if (widths[y] > w * 0.02 && widths[y] < w0) w0 = widths[y];
+  if (!isFinite(w0)) w0 = w * 0.2;
+
+  let shoulderY = -1;
+  for (let y = y0 + Math.round(h * 0.04); y < Math.min(h - 1, y0 + h * 0.45); y++)
+    if (widths[y] > w0 * 2.2){ shoulderY = y; break; }
+
+  let headPx = shoulderY > 0 ? (shoulderY - y0) * 1.08 : h * 0.16;
+  headPx = Math.max(h * 0.08, Math.min(h * 0.30, headPx));
+
+  let cx = 0, n = 0;
+  for (let y = y0; y < Math.min(h - 1, y0 + headPx * 0.7); y++){
+    if (widths[y] > 0){ cx += centers[y]; n++; }
+  }
+  cx = n ? cx / n : w / 2;
+
+  return {
+    headX: cx / w,
+    headY: (y0 + headPx * 0.52) / h,
+    headH: headPx / h
+  };
+}
+
+const customKey = g => 'aura_photo_' + g;
+
+async function buildCustomPerson(g, dataURL, onStage){
+  const stage = async t => {
+    if (onStage){ onStage(t); await new Promise(r => setTimeout(r, 80)); }
+  };
+  await stage('Загружаем фото…');
+  const img = await loadImage(dataURL);
+  await stage('Убираем фон…');
+  const cut = cutBackground(img, false);
+  await stage('Ищем голову…');
+  const head = detectHead(cut);
+  await stage('Собираем видео-аватар…');
+  persons[g] = {
+    cv: cut, w: cut.width, h: cut.height,
+    cfg: { ...head, scale: 0.94, custom: true }
+  };
+  personDirty = true;
+  updateMissingHint();
+  await stage('Готово!');
+}
+
+async function loadPerson(g){
+  const cfg = PEOPLE[g];
+  try {
+    const custom = localStorage.getItem(customKey(g));
+    if (custom){
+      await buildCustomPerson(g, custom);
+      return;
+    }
+    const img = await loadImage(cfg.src);
+    const cut = cutBackground(img, !!cfg.precut);
+    persons[g] = { cv: cut, w: cut.width, h: cut.height, cfg };
+    personDirty = true;
+    updateMissingHint();
+  } catch (e){
+    console.warn('Не удалось загрузить/обработать фото:', cfg.src, e);
+    persons[g] = null;
+    updateMissingHint();
+  }
+}
+
+function updateMissingHint(){
+  const activeMissing = !persons[genderTarget > 0.5 ? 'f' : 'm'];
+  document.getElementById('missing').style.display =
+    activeMissing ? 'block' : 'none';
+}
+
+/* геометрия фигуры на экране: во весь рост, прижата к низу */
+function layout(g){
+  const p = persons[g];
+  if (!p) return null;
+  // на узких экранах допускаем обрезку по бокам, чтобы фигура заполняла высоту
+  const wideCap = W * (W < 600 ? 1.45 : 1.18);
+  const dh = Math.min(H * (p.cfg.scale || 1), wideCap / (p.w / p.h));
+  const dw = dh * (p.w / p.h);
+  const dx = W / 2 - dw / 2;
+  // не оставляем пустоту между названием и головой
+  const dy = Math.min(H - dh, H * 0.20);
+  return {
+    p, dx, dy, dw, dh,
+    hx: dx + p.cfg.headX * dw,
+    hy: dy + p.cfg.headY * dh,
+    headPx: p.cfg.headH * dh
+  };
+}
+
+/* геометрия облака: центр и радиус следуют за головой активного персонажа,
+   в т.ч. загруженного пользователем — крупнее голова, крупнее облако */
+function computeCloud(){
+  const Lm = layout('m'), Lf = layout('f');
+  let hx = W / 2, hy = H * 0.30, headPx = H * 0.19;
+  if (Lm && Lf){
+    hx = lerp(Lm.hx, Lf.hx, genderMix);
+    hy = lerp(Lm.hy, Lf.hy, genderMix);
+    headPx = lerp(Lm.headPx, Lf.headPx, genderMix);
+  } else if (Lm || Lf){
+    const L = Lm || Lf;
+    hx = L.hx; hy = L.hy; headPx = L.headPx;
+  }
+  const minWH = Math.min(W, H);
+  const base = Math.max(minWH * 0.20, Math.min(headPx * 1.45, minWH * 0.46));
+  // мало слов — облако плотнее и компактнее, много — шире в диаметре
+  const nFactor = Math.max(0.68, Math.min(1.3, Math.sqrt((particles.length || 120) / 150)));
+  const R = Math.max(minWH * 0.15, Math.min(base * nFactor, minWH * 0.5));
+  // на маленьких экранах слова заметно мельче — соразмерно экрану
+  const screenK = minWH < 600 ? 0.68 : 1;
+  return {
+    hx,
+    cy: hy + R * 0.16,
+    R,
+    sizeScale: Math.max(0.45, Math.min(1.45, base / 230)) * screenK
+  };
+}
+
+function renderPerson(mix){
+  pctx.clearRect(0, 0, W, H);
+  for (const [g, alpha] of [['m', 1 - mix], ['f', mix]]){
+    if (alpha < 0.004) continue;
+    const L = layout(g);
+    if (!L) continue;
+    pctx.globalAlpha = alpha;
+    pctx.drawImage(L.p.cv, L.dx, L.dy, L.dw, L.dh);
+  }
+  pctx.globalAlpha = 1;
+  // фигура «тает» к своему нижнему краю (он может быть выше низа экрана)
+  const Lm = layout('m'), Lf = layout('f');
+  const bm = Lm ? Lm.dy + Lm.dh : H;
+  const bf = Lf ? Lf.dy + Lf.dh : H;
+  const figBottom = bm + (bf - bm) * mix;
+  pctx.globalCompositeOperation = 'destination-out';
+  const fade = pctx.createLinearGradient(0, figBottom * 0.72, 0, figBottom);
+  fade.addColorStop(0, 'rgba(0,0,0,0)');
+  fade.addColorStop(1, 'rgba(0,0,0,0.72)');
+  pctx.fillStyle = fade;
+  pctx.fillRect(0, figBottom * 0.7, W, figBottom * 0.3 + 2);
+  pctx.globalCompositeOperation = 'source-over';
+}
+
+/* ============================== частицы ============================== */
+
+const MAX_PARTICLES = 2800;
+let particles = [];
+
+/* ---------- анализ вставленного текста ---------- */
+
+const STOPWORDS = new Set(('и в во не что он на я с со как а то все всё она так его но да ты к у же вы за бы по ее её ' +
+  'мне было вот от меня еще ещё нет о из ему теперь когда даже ну вдруг ли если уже или ни быть был была были было ' +
+  'него до вас нибудь опять уж вам ведь там потом себя ничего ей может мочь они тут где есть надо ней для мы тебя их ' +
+  'чем сам чтоб без будто чего раз тоже себе под будет ж тогда кто этот тот того потому этого какой какая какие совсем ' +
+  'ним здесь этом один одна почти мой моя моё тем чтобы нее неё сейчас куда зачем всех никогда можно при наконец два ' +
+  'об другой хоть после над больше через эти нас про всего них эту свой своя свои свое своё впрочем хорошо перед ' +
+  'иногда лучше чуть том нельзя такой такая им более всегда конечно всю между это эта также который которая которые ' +
+  'лишь именно очень просто весь вся поэтому например итак значит стал стала стало стали сказал сказала говорит ' +
+  'the a an and or but if of to in on for with at by from is are was were be been being it its this that these those ' +
+  'i you he she we they my your his her our their me him us them as not no do does did done have has had having ' +
+  'will would can could should shall may might must about into than then so what when where which who whom how why ' +
+  'all any some there here out up down over under again more most other such only own same too very just because').split(/\s+/));
+
+const RU_ENDINGS = /(иями|ями|ами|иях|иям|ием|ього|ого|его|ому|ему|ыми|ими|ует|уют|яет|яют|ешь|ишь|ете|ите|ала|яла|али|яли|или|ыли|ать|ять|ить|еть|ться|тся|ов|ев|ей|ой|ый|ий|ая|яя|ое|ее|ую|юю|ам|ям|ом|ем|ах|ях|ут|ют|ат|ят|ит|ет|ал|ял|ла|ло|ли|ть|у|ю|а|я|ы|и|е|о|ь)$/;
+
+function stemRu(w){
+  let s = w;
+  for (let k = 0; k < 2; k++){
+    const t = s.replace(RU_ENDINGS, '');
+    if (t === s || t.length < 4) break;
+    s = t;
+  }
+  return s;
+}
+
+/* из связного текста достаём главные темы: чистим стоп-слова,
+   склеиваем словоформы, взвешиваем по частоте */
+function analyzeText(text){
+  const tokens = text.toLowerCase().replace(/ё/g, 'е').match(/[a-zа-я][a-zа-я\-']*/g) || [];
+  const groups = new Map(); // основа -> { count, forms }
+  for (let t of tokens){
+    t = t.replace(/^[-']+|[-']+$/g, '');
+    if (t.length < 3 || STOPWORDS.has(t)) continue;
+    const key = /[а-я]/.test(t) ? stemRu(t) : t.replace(/(ing|ed|es|s)$/, '');
+    let g = groups.get(key);
+    if (!g){ g = { count: 0, forms: new Map() }; groups.set(key, g); }
+    g.count++;
+    g.forms.set(t, (g.forms.get(t) || 0) + 1);
+  }
+  return [...groups.values()]
+    .map(g => {
+      let best = '', bc = 0;
+      for (const [f, c] of g.forms)
+        if (c > bc || (c === bc && (best === '' || f.length < best.length))){ best = f; bc = c; }
+      return { word: best, weight: g.count };
+    })
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 90);
+}
+
+/* список тегов или связный текст? Если текст — анализируем. */
+function getCloudWords(text){
+  const commaParts = text.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+  const wordCount = (text.match(/\S+/g) || []).length;
+  if (wordCount > 15 && commaParts.length < wordCount * 0.6){
+    const items = analyzeText(text);
+    if (items.length >= 3){
+      return {
+        words: items.map(i => i.word),
+        weights: new Map(items.map(i => [i.word, i.weight])),
+        analyzed: true
+      };
+    }
+  }
+  let parts = commaParts;
+  if (parts.length <= 1) parts = text.split(/\s+/).filter(Boolean);
+  return { words: parts, weights: null, analyzed: false };
+}
+
+/* Каждое слово в облаке встречается ровно один раз — без дублей.
+   Чем меньше слов, тем они крупнее и ближе к внешней орбите вокруг головы. */
+function buildParticles(words, weights = null){
+  let uniq = [...new Set(words.map(w => w.trim()).filter(Boolean))];
+  if (!uniq.length) return;
+  if (weights) uniq.sort((a, b) => (weights.get(b) || 0) - (weights.get(a) || 0));
+
+  // плотность зависит от размера облака: на телефоне слов меньше — без каши
+  const R = computeCloud().R;
+  const mobile = Math.min(W, H) < 600;
+  const maxWords = Math.max(40, Math.min(MAX_PARTICLES,
+    Math.round(R * R / 240 * (mobile ? 1.5 : 1))));
+  if (uniq.length > maxWords){
+    if (weights){
+      uniq = uniq.slice(0, maxWords); // оставляем самые весомые темы
+    } else {
+      for (let i = uniq.length - 1; i > 0; i--){
+        const j = (Math.random() * (i + 1)) | 0;
+        [uniq[i], uniq[j]] = [uniq[j], uniq[i]];
+      }
+      uniq = uniq.slice(0, maxWords);
+    }
+  }
+  const n = uniq.length;
+
+  const boost = Math.min(3.2, Math.max(1, Math.sqrt(90 / n)));
+  const shellBias = Math.min(1, Math.max(0, 1 - n / 40));
+  const heroes = n >= 40; // в больших облаках часть слов — крупные акценты
+
+  // для проанализированного текста размер слова = вес темы
+  let maxWeight = 1, heroThr = Infinity;
+  if (weights){
+    maxWeight = Math.max(...uniq.map(w => weights.get(w) || 1));
+    const sorted = uniq.map(w => weights.get(w) || 1).sort((a, b) => b - a);
+    heroThr = sorted[Math.min(sorted.length - 1, Math.max(1, Math.round(n * 0.07)))];
+  }
+
+  // случайные роли для списка слов (у текста роли раздаёт вес темы)
+  if (!weights){
+    for (let i = uniq.length - 1; i > 0; i--){
+      const j = (Math.random() * (i + 1)) | 0;
+      [uniq[i], uniq[j]] = [uniq[j], uniq[i]];
+    }
+  }
+  const heroN = (!weights && n >= 12) ? Math.max(2, Math.round(n * 0.06)) : 0;
+  const midN  = Math.round(n * 0.22);
+
+  const now = performance.now();
+  particles = uniq.map((word, i) => {
+    const u = Math.random(), v = Math.random();
+    const phi   = Math.acos((2 * u - 1) * 0.94); // без «мёртвых» полюсов
+    const theta = 2 * Math.PI * v;
+    // концентрация к голове: больше слов в сердцевине облака
+    const rfVol   = 0.22 + 0.78 * Math.pow(Math.random(), 0.5);
+    const rfShell = 0.85 + 0.15 * Math.random();
+    const rf = rfVol + (rfShell - rfVol) * shellBias;
+
+    // типографская иерархия: несколько крупных серифных акцентов,
+    // средний слой и россыпь мелких капс-слов
+    let style, size;
+    if (weights){
+      const wt = weights.get(word) || 1;
+      const t = Math.sqrt(wt / maxWeight);
+      if (wt >= heroThr && t > 0.5){ style = 'hero'; size = 26 + 24 * t; }
+      else if (t > 0.55){ style = Math.random() < 0.2 ? 'gold' : 'mid'; size = 13 + 12 * t; }
+      else { style = 'tiny'; size = 8 + 8 * t; }
+    } else if (i < heroN){
+      style = 'hero'; size = 30 + Math.random() * 14;
+    } else if (i < heroN + midN){
+      style = Math.random() < 0.2 ? 'gold' : 'mid';
+      size = 14 + Math.random() * 8;
+    } else {
+      style = 'tiny'; size = 8 + Math.random() * 4.5;
+    }
+    size = Math.min(56, size * boost);
+
+    return {
+      word: style === 'hero' ? word.toUpperCase() : word,
+      style,
+      phi, theta, rf,
+      size,
+      spin: (Math.random() - 0.5) * 0.05,      // собственное вращение
+      ja: 0.04 + Math.random() * 0.06,          // дрейф по вертикали
+      jp: Math.random() * Math.PI * 2,
+      js: 0.2 + Math.random() * 0.4,
+      born: now + Math.random() * 500           // слова проявляются каскадом
+    };
+  });
+}
+
+const currentGender = () => (genderTarget > 0.5 ? 'f' : 'm');
+
+/* показать либо слова/темы пользователя, либо дефолтное облако текущего пола */
+function refreshCloud(){
+  const { words, weights } = getCloudWords(input.value);
+  if (words.length) buildParticles(words, weights);
+  else buildParticles(DEFAULTS[currentGender()]);
+}
+
+/* ---------- кэш спрайтов слов ---------- */
+
+const spriteCache = new Map();
+const SERIF = "'Playfair Display',Georgia,serif";
+
+const WORD_STYLES = {
+  hero: { font: px => `600 ${px}px ${SERIF}`,        color: '#f7f6f2', glow: true  },
+  gold: { font: px => `italic 500 ${px}px ${SERIF}`, color: '#e6cf9a', glow: false },
+  mid:  { font: px => `400 ${px}px ${FONT}`,         color: '#f2f0ea', glow: false },
+  tiny: { font: px => `300 ${px}px ${FONT}`,         color: '#cfccc2', glow: false,
+          caps: true, tracking: 0.16 }
+};
+
+function getSprite(word, size, style, soft){
+  const bucket = Math.round(size / 2) * 2;
+  const key = word + '|' + bucket + '|' + style + (soft ? '|s' : '');
+  let sp = spriteCache.get(key);
+  if (sp) return sp;
+
+  const st = WORD_STYLES[style] || WORD_STYLES.tiny;
+  const text = st.caps ? word.toUpperCase() : word;
+  const px = bucket;
+  const pad = Math.ceil(px * 0.45) + 4; // запас под курсив, свечение и размытие
+  const mctx = document.createElement('canvas').getContext('2d');
+  mctx.font = st.font(px);
+  if (st.tracking) mctx.letterSpacing = (px * st.tracking) + 'px';
+  const tw = Math.ceil(mctx.measureText(text).width);
+
+  const c = document.createElement('canvas');
+  const w = tw + pad * 2, h = Math.ceil(px * 1.5) + pad * 2;
+  c.width  = Math.max(1, Math.round(w * DPR));
+  c.height = Math.max(1, Math.round(h * DPR));
+  const g = c.getContext('2d');
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  g.font = st.font(px);
+  if (st.tracking) g.letterSpacing = (px * st.tracking) + 'px';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  if (soft) g.filter = `blur(${Math.max(1, px * 0.09)}px)`; // глубина резкости
+  if (st.glow){
+    g.shadowColor = 'rgba(255,253,245,0.45)';
+    g.shadowBlur = px * 0.3;
+  }
+  g.fillStyle = st.color;
+  g.fillText(text, w / 2, h / 2);
+
+  sp = { c, w, h };
+  spriteCache.set(key, sp);
+  if (spriteCache.size > 6000) spriteCache.clear();
+  return sp;
+}
+
+// когда докачается Playfair Display — перерисовать спрайты уже красивым шрифтом
+if (document.fonts && document.fonts.ready)
+  document.fonts.ready.then(() => spriteCache.clear());
+
+/* ============================== сцена ============================== */
+
+let rotY = 0;
+let tiltTarget = 0, tilt = 0;
+let panTarget = 0, pan = 0;
+let genderMix = 0;   // 0 = мужчина, 1 = женщина
+let genderTarget = 0;
+let lastT = performance.now();
+
+window.addEventListener('pointermove', e => {
+  tiltTarget = (e.clientY / H - 0.45) * 0.30;
+  panTarget  = (e.clientX / W - 0.5) * 0.22;
+});
+
+const lerp = (a, b, t) => a + (b - a) * t;
+
+function frame(now){
+  const dt = Math.min((now - lastT) / 1000, 0.05);
+  lastT = now;
+
+  rotY += dt * 0.10;
+  tilt += (tiltTarget - tilt) * 0.04;
+  pan  += (panTarget - pan) * 0.04;
+  const prevMix = genderMix;
+  genderMix += (genderTarget - genderMix) * Math.min(1, dt * 5);
+
+  if (personDirty || Math.abs(genderMix - prevMix) > 0.0005){
+    renderPerson(genderMix);
+    personDirty = false;
+  }
+
+  const { hx, cy, R, sizeScale } = computeCloud();
+
+  const t = now / 1000;
+
+  bctx.clearRect(0, 0, W, H);
+  fctx.clearRect(0, 0, W, H);
+
+  // фон-вуаль + свечение за головой (задний слой)
+  const bg = bctx.createRadialGradient(hx, cy, 0, hx, cy, Math.max(W, H) * 0.75);
+  bg.addColorStop(0, 'rgba(30,30,38,0.5)');
+  bg.addColorStop(0.45, 'rgba(10,10,13,0.22)');
+  bg.addColorStop(1, 'rgba(0,0,0,0)');
+  bctx.fillStyle = bg;
+  bctx.fillRect(0, 0, W, H);
+
+  const glow = bctx.createRadialGradient(hx, cy, 0, hx, cy, R * 1.8);
+  glow.addColorStop(0, 'rgba(150,150,175,0.12)');
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  bctx.fillStyle = glow;
+  bctx.fillRect(hx - R * 2.2, cy - R * 2.2, R * 4.4, R * 4.4);
+
+  // слова: задняя полусфера — на back, передняя — на front
+  const Rx = R, Ry = R * 0.92;
+  const cosT = Math.cos(tilt), sinT = Math.sin(tilt);
+  const rot = rotY + pan;
+
+  for (const p of particles){
+    const drift = Math.sin(t * p.js + p.jp) * p.ja;
+    const phi = p.phi + drift;
+    const th  = p.theta + rot + p.spin * t; // у каждого слова своя скорость
+    const sinP = Math.sin(phi), cosP = Math.cos(phi);
+    const x = sinP * Math.cos(th);
+    const z = sinP * Math.sin(th);
+    const y = cosP;
+    const y2 = y * cosT - z * sinT;
+    const z2 = y * sinT + z * cosT;
+
+    const d = (1 - z2) / 2; // 1 = передний план
+    const breathe = 1 + 0.035 * Math.sin(t * 0.35 + p.jp); // лёгкое «дыхание» орбиты
+    const sx = hx + x  * Rx * p.rf * breathe;
+    const sy = cy + y2 * Ry * p.rf * breathe;
+
+    const fade = Math.min(1, Math.max(0, (now - p.born) / 600));
+    const a = (0.04 + 0.96 * Math.pow(d, 2.4)) * fade;
+    if (a < 0.02) continue;
+
+    const sc = (0.45 + 0.62 * d) * sizeScale;
+    const sp = getSprite(p.word, p.size, p.style, d < 0.38); // дальние — размыты
+    const ctx = z2 >= 0 ? bctx : fctx;
+    ctx.globalAlpha = a;
+    ctx.drawImage(sp.c,
+      sx - (sp.w * sc) / 2,
+      sy - (sp.h * sc) / 2,
+      sp.w * sc, sp.h * sc);
+  }
+  bctx.globalAlpha = 1;
+  fctx.globalAlpha = 1;
+
+  // виньетка (передний слой)
+  const vg = fctx.createRadialGradient(W / 2, H * 0.45, Math.min(W, H) * 0.35, W / 2, H * 0.45, Math.max(W, H) * 0.78);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.62)');
+  fctx.fillStyle = vg;
+  fctx.fillRect(0, 0, W, H);
+
+  requestAnimationFrame(frame);
+}
+
+/* ============================== UI ============================== */
+
+const toggle     = document.getElementById('genderToggle');
+const fab        = document.getElementById('fab');
+const scrim      = document.getElementById('scrim');
+const panel      = document.getElementById('panel');
+const input      = document.getElementById('wordsInput');
+const counter    = document.getElementById('wordCount');
+const saveBtn    = document.getElementById('saveBtn');
+const resetBtn   = document.getElementById('resetBtn');
+const photoBtn   = document.getElementById('photoBtn');
+const photoInput = document.getElementById('photoInput');
+const photoReset = document.getElementById('photoReset');
+
+function updatePhotoReset(){
+  photoReset.style.display =
+    localStorage.getItem(customKey(currentGender())) ? 'inline-block' : 'none';
+}
+
+photoBtn.addEventListener('click', () => photoInput.click());
+
+const photoStatus     = document.getElementById('photoStatus');
+const photoStatusText = document.getElementById('photoStatusText');
+
+function setPhotoStage(text){
+  photoBtn.style.display    = text ? 'none' : '';
+  photoStatus.style.display = text ? 'flex' : 'none';
+  photoStatusText.textContent = text || '';
+}
+
+photoInput.addEventListener('change', () => {
+  const file = photoInput.files && photoInput.files[0];
+  photoInput.value = '';
+  if (!file) return;
+  setPhotoStage('Читаем файл…');
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      // ужимаем до рабочего размера и сохраняем исходник (с фоном) в localStorage
+      const img = await loadImage(reader.result);
+      const k = Math.min(1, 1300 / img.naturalHeight);
+      const c = document.createElement('canvas');
+      c.width  = Math.max(1, Math.round(img.naturalWidth * k));
+      c.height = Math.max(1, Math.round(img.naturalHeight * k));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      const dataURL = c.toDataURL('image/jpeg', 0.85);
+      const g = currentGender();
+      try { localStorage.setItem(customKey(g), dataURL); }
+      catch (e){ console.warn('Фото не поместилось в localStorage — останется до перезагрузки', e); }
+      await buildCustomPerson(g, dataURL, setPhotoStage);
+      updatePhotoReset();
+      setTimeout(() => { setPhotoStage(null); closePanel(); }, 500);
+    } catch (e){
+      console.warn('Не удалось обработать загруженное фото', e);
+      setPhotoStage(null);
+    }
+  };
+  reader.onerror = () => setPhotoStage(null);
+  reader.readAsDataURL(file);
+});
+
+photoReset.addEventListener('click', () => {
+  localStorage.removeItem(customKey(currentGender()));
+  loadPerson(currentGender());
+  updatePhotoReset();
+});
+
+toggle.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-g]');
+  if (!btn) return;
+  const g = btn.dataset.g;
+  genderTarget = g === 'f' ? 1 : 0;
+  toggle.classList.toggle('f', g === 'f');
+  toggle.querySelectorAll('button').forEach(b =>
+    b.classList.toggle('active', b === btn));
+  localStorage.setItem(LS_GENDER, g);
+  updateMissingHint();
+  refreshCloud(); // без своих слов у каждого пола — своё дефолтное облако
+  updatePhotoReset();
+});
+
+function plural(n){
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return 'слово';
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'слова';
+  return 'слов';
+}
+
+function updateCounter(){
+  const { words, analyzed } = getCloudWords(input.value);
+  const n = new Set(words).size;
+  counter.textContent = analyzed
+    ? `текст: ${n} тем`
+    : `${n} ${plural(n)}`;
+}
+
+let debounceId = 0;
+input.addEventListener('input', () => {
+  updateCounter();
+  clearTimeout(debounceId);
+  debounceId = setTimeout(refreshCloud, 130);
+});
+
+resetBtn.addEventListener('click', () => {
+  input.value = '';
+  updateCounter();
+  refreshCloud();
+  input.focus();
+});
+
+/* --- морф панель <-> кнопка --- */
+const EASE = 'cubic-bezier(.22,.9,.24,1)';
+let panelOpen = false, animating = false;
+
+function morphDelta(){
+  const pr = panel.getBoundingClientRect();
+  const fr = fab.getBoundingClientRect();
+  return {
+    dx: (fr.left + fr.width / 2)  - (pr.left + pr.width / 2),
+    dy: (fr.top  + fr.height / 2) - (pr.top  + pr.height / 2),
+    s:  fr.width / pr.width
+  };
+}
+
+function openPanel(){
+  if (panelOpen || animating) return;
+  panelOpen = true; animating = true;
+  panel.classList.add('visible');
+  scrim.classList.add('on');
+  fab.classList.add('hidden');
+
+  const { dx, dy, s } = morphDelta();
+  const anim = panel.animate([
+    { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 0.25, borderRadius: '46px' },
+    { transform: 'translate(0, 0) scale(1)',                opacity: 1,    borderRadius: 'var(--panel-r)' }
+  ], { duration: 560, easing: EASE });
+  anim.onfinish = () => { animating = false; input.focus(); };
+}
+
+function closePanel(){
+  if (!panelOpen || animating) return;
+  panelOpen = false; animating = true;
+  scrim.classList.remove('on');
+
+  const { dx, dy, s } = morphDelta();
+  const anim = panel.animate([
+    { transform: 'translate(0, 0) scale(1)',                opacity: 1,    borderRadius: 'var(--panel-r)' },
+    { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 0.15, borderRadius: '46px' }
+  ], { duration: 520, easing: EASE });
+  anim.onfinish = () => {
+    panel.classList.remove('visible');
+    fab.classList.remove('hidden');
+    fab.animate([
+      { transform: 'scale(.4)', opacity: 0 },
+      { transform: 'scale(1)',  opacity: .55 }
+    ], { duration: 320, easing: EASE });
+    animating = false;
+  };
+}
+
+fab.addEventListener('click', openPanel);
+scrim.addEventListener('click', closePanel);
+window.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+saveBtn.addEventListener('click', () => {
+  const { words } = getCloudWords(input.value);
+  if (words.length) localStorage.setItem(LS_WORDS, input.value.trim());
+  else localStorage.removeItem(LS_WORDS);
+  refreshCloud();
+  closePanel();
+});
+
+/* ============================== старт ============================== */
+
+resize();
+
+const savedGender = localStorage.getItem(LS_GENDER);
+if (savedGender === 'f'){
+  genderTarget = genderMix = 1;
+  toggle.classList.add('f');
+  toggle.querySelectorAll('button').forEach(b =>
+    b.classList.toggle('active', b.dataset.g === 'f'));
+}
+
+const savedWords = localStorage.getItem(LS_WORDS) || '';
+if (savedWords) input.value = savedWords;
+updateCounter();
+refreshCloud();
+updatePhotoReset();
+
+loadPerson('m');
+loadPerson('f');
+
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
