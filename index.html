@@ -43,6 +43,109 @@
     letter-spacing:.18em;text-transform:uppercase;
     color:rgba(245,244,240,.38);
   }
+  .brand{pointer-events:none}
+  #promiseBtn{
+    pointer-events:auto;
+    display:inline-flex;align-items:center;justify-content:center;
+    vertical-align:middle;margin:-2px 0 0 10px;
+    width:19px;height:19px;border-radius:50%;
+    appearance:none;cursor:pointer;padding:0;
+    background:linear-gradient(145deg,rgba(230,207,154,.22),rgba(230,207,154,.05));
+    border:1px solid rgba(230,207,154,.45);
+    color:rgba(236,217,168,.9);
+    transition:transform .3s cubic-bezier(.22,.9,.24,1),border-color .3s,opacity .3s;
+    opacity:.75;
+  }
+  #promiseBtn svg{width:10px;height:10px;display:block}
+  #promiseBtn:hover{opacity:1;transform:scale(1.15);border-color:rgba(230,207,154,.9)}
+  #promiseBtn.pulse{animation:promisePulse 2.4s ease-in-out 2}
+  @keyframes promisePulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(230,207,154,0)}
+    50%{box-shadow:0 0 0 5px rgba(230,207,154,.18)}
+  }
+
+  /* ---------- обещание на неделю ---------- */
+  #promisePanel{
+    pointer-events:auto;
+    position:relative;overflow:hidden;
+    width:min(440px,100%);
+    background:linear-gradient(165deg,rgba(255,255,255,.10),rgba(255,255,255,.03) 28%,rgba(14,14,17,.7) 100%);
+    border:1px solid rgba(230,207,154,.28);
+    border-radius:var(--panel-r);
+    backdrop-filter:blur(42px) saturate(1.7);
+    -webkit-backdrop-filter:blur(42px) saturate(1.7);
+    box-shadow:0 30px 90px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.22);
+    padding:32px 32px 28px;
+    display:none;will-change:transform;
+  }
+  #promisePanel::before{
+    content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(140% 55% at 18% -6%,rgba(230,207,154,.16),rgba(255,255,255,0) 58%);
+  }
+  #promisePanel.visible{display:block}
+  #promisePanel h2{
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:20px;font-weight:500;letter-spacing:.05em;
+    color:var(--gold);
+  }
+  #promisePanel .from{
+    margin-top:7px;
+    font-size:10.5px;font-weight:300;letter-spacing:.18em;text-transform:uppercase;
+    color:rgba(245,244,240,.32);
+  }
+  #promiseText{
+    margin-top:20px;
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:17px;font-weight:500;line-height:1.65;letter-spacing:.01em;
+    color:rgba(247,246,242,.94);
+    white-space:pre-wrap;
+    max-height:46vh;overflow-y:auto;
+  }
+  #promiseLink{
+    display:inline-block;margin-top:14px;
+    font-size:11px;font-weight:300;letter-spacing:.12em;text-transform:uppercase;
+    color:rgba(230,207,154,.65);text-decoration:none;
+    border-bottom:1px solid rgba(230,207,154,.25);
+    transition:color .3s,border-color .3s;
+  }
+  #promiseLink:hover{color:var(--gold);border-color:rgba(230,207,154,.6)}
+  .promise-check{
+    display:flex;align-items:flex-start;gap:12px;
+    margin-top:24px;cursor:pointer;user-select:none;
+  }
+  .promise-check input{position:absolute;opacity:0;pointer-events:none}
+  .promise-check .box{
+    flex:none;width:20px;height:20px;margin-top:1px;border-radius:7px;
+    border:1px solid rgba(230,207,154,.5);
+    background:rgba(230,207,154,.06);
+    display:flex;align-items:center;justify-content:center;
+    transition:background .25s,border-color .25s;
+  }
+  .promise-check .box svg{width:11px;height:11px;opacity:0;transform:scale(.5);
+    transition:opacity .25s,transform .25s;color:#0a0a0a}
+  .promise-check input:checked + .box{background:var(--gold);border-color:var(--gold)}
+  .promise-check input:checked + .box svg{opacity:1;transform:scale(1)}
+  .promise-check span{
+    font-size:13px;font-weight:300;line-height:1.55;letter-spacing:.02em;
+    color:rgba(245,244,240,.72);
+  }
+  #promiseAccept{
+    margin-top:22px;width:100%;
+    appearance:none;border:0;cursor:pointer;
+    background:var(--gold);color:#171307;
+    font-family:var(--font);font-size:13px;font-weight:700;
+    letter-spacing:.24em;text-transform:uppercase;
+    padding:17px;border-radius:16px;
+    opacity:0;transform:translateY(8px);pointer-events:none;
+    transition:opacity .4s,transform .4s cubic-bezier(.22,.9,.24,1),box-shadow .3s;
+  }
+  #promiseAccept.on{opacity:1;transform:translateY(0);pointer-events:auto}
+  #promiseAccept:hover{box-shadow:0 12px 40px rgba(230,207,154,.24)}
+  #promiseDone{
+    margin-top:20px;text-align:center;display:none;
+    font-size:12px;font-weight:300;letter-spacing:.12em;text-transform:uppercase;
+    color:rgba(230,207,154,.75);
+  }
 
   /* ---------- скрытый центр облака ---------- */
   #cloudHandle{
@@ -416,7 +519,13 @@
 <canvas id="front"  class="layer"></canvas>
 
 <div class="brand">
-  <span>ЧЕМ ДУХ НАПОЛНЕН</span>
+  <span>ЧЕМ ДУХ НАПОЛНЕН<button id="promiseBtn" title="Обещание на неделю"
+    aria-label="Обещание на неделю">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12.5l4.5 4.5L19 7.5"/>
+    </svg>
+  </button></span>
   <em>содержание духа из ваших слов</em>
 </div>
 
@@ -453,6 +562,26 @@
 </button>
 
 <div class="scrim" id="scrim"></div>
+
+<div class="panel-wrap" id="promiseWrap">
+  <div id="promisePanel">
+    <h2>Обещание на неделю</h2>
+    <div class="from">от пастыря · для нашей семьи</div>
+    <div id="promiseText">Загружаем…</div>
+    <a id="promiseLink" href="https://t.me/genius_meridian" target="_blank" rel="noopener">открыть в telegram</a>
+    <label class="promise-check" id="promiseCheckWrap">
+      <input type="checkbox" id="promiseCheck">
+      <span class="box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </span>
+      <span>Я принимаю это обещание и беру его на эту неделю</span>
+    </label>
+    <button id="promiseAccept">Обещаю</button>
+    <div id="promiseDone">вы уже приняли обещание этой недели</div>
+  </div>
+</div>
+
 <div class="panel-wrap">
   <div class="panel" id="panel">
     <h2>Ваше облако тегов</h2>
@@ -2141,6 +2270,135 @@ async function applySharedState(str){
   }
 }
 
+/* ============================== обещание на неделю ============================== */
+
+const promiseBtn    = document.getElementById('promiseBtn');
+const promisePanel  = document.getElementById('promisePanel');
+const promiseTextEl = document.getElementById('promiseText');
+const promiseLink   = document.getElementById('promiseLink');
+const promiseCheck  = document.getElementById('promiseCheck');
+const promiseAccept = document.getElementById('promiseAccept');
+const promiseDone   = document.getElementById('promiseDone');
+const promiseCheckWrap = document.getElementById('promiseCheckWrap');
+
+const LS_PROMISE = 'aura_promise_ack';   // {id, week} — что уже приняли
+const LS_PROMISE_SEEN = 'aura_promise_seen'; // неделя последнего автопоказа
+
+let promiseData = null;
+let promiseOpen = false, promiseAnimating = false;
+
+/* номер недели вида 2026-W31 — по нему решаем, показывать ли снова */
+function isoWeek(d = new Date()){
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  const start = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((t - start) / 86400000 + 1) / 7);
+  return t.getUTCFullYear() + '-W' + String(week).padStart(2, '0');
+}
+
+function readAck(){
+  try { return JSON.parse(localStorage.getItem(LS_PROMISE) || 'null'); }
+  catch { return null; }
+}
+
+function promiseMorph(open){
+  const pr = promisePanel.getBoundingClientRect();
+  const br = promiseBtn.getBoundingClientRect();
+  const dx = (br.left + br.width / 2) - (pr.left + pr.width / 2);
+  const dy = (br.top + br.height / 2) - (pr.top + pr.height / 2);
+  const s = Math.max(0.04, br.width / pr.width);
+  const small = { transform: `translate(${dx}px, ${dy}px) scale(${s})`,
+                  opacity: 0.15, borderRadius: '50%' };
+  const full  = { transform: 'translate(0, 0) scale(1)',
+                  opacity: 1, borderRadius: 'var(--panel-r)' };
+  return promisePanel.animate(open ? [small, full] : [full, small],
+    { duration: open ? 560 : 500, easing: EASE });
+}
+
+function openPromise(){
+  if (promiseOpen || panelOpen) return;
+  promiseOpen = true; promiseAnimating = true;
+  promisePanel.classList.add('visible');
+  scrim.classList.add('on');
+  promiseMorph(true).onfinish = () => { promiseAnimating = false; };
+}
+
+function closePromise(){
+  if (!promiseOpen) return;
+  promiseOpen = false; promiseAnimating = true;
+  scrim.classList.remove('on');
+  promiseMorph(false).onfinish = () => {
+    if (!promiseOpen) promisePanel.classList.remove('visible');
+    promiseAnimating = false;
+  };
+}
+
+promiseBtn.addEventListener('click', () => {
+  promiseBtn.classList.remove('pulse');
+  openPromise();
+});
+
+promiseCheck.addEventListener('change', () => {
+  promiseAccept.classList.toggle('on', promiseCheck.checked);
+});
+
+promiseAccept.addEventListener('click', () => {
+  localStorage.setItem(LS_PROMISE, JSON.stringify({
+    id: promiseData?.id || null,
+    week: isoWeek(),
+    at: new Date().toISOString()
+  }));
+  showToast('Обещание принято');
+  closePromise();
+  syncPromiseUi();
+});
+
+/* приняли ли уже это обещание */
+function promiseAccepted(){
+  const ack = readAck();
+  if (!ack) return false;
+  if (promiseData?.id) return ack.id === promiseData.id;
+  return ack.week === isoWeek();
+}
+
+function syncPromiseUi(){
+  const done = promiseAccepted();
+  promiseCheckWrap.style.display = done ? 'none' : 'flex';
+  promiseAccept.style.display    = done ? 'none' : '';
+  promiseDone.style.display      = done ? 'block' : 'none';
+  if (!done){
+    promiseCheck.checked = false;
+    promiseAccept.classList.remove('on');
+  }
+}
+
+async function loadPromise(){
+  try {
+    const res = await fetch('promise.json?t=' + Math.floor(Date.now() / 6e5));
+    promiseData = await res.json();
+  } catch { promiseData = null; }
+
+  if (promiseData?.found && promiseData.text){
+    promiseTextEl.textContent = promiseData.text;
+    promiseLink.href = promiseData.url || promiseData.channel_url || promiseLink.href;
+  } else {
+    promiseTextEl.textContent =
+      'Обещание на эту неделю ещё не опубликовано.\n\nОно появится здесь, как только выйдет в канале.';
+    promiseLink.href = promiseData?.channel_url || 'https://t.me/genius_meridian';
+  }
+  syncPromiseUi();
+
+  // ненавязчиво: раз в неделю сам, дальше — только по кнопке
+  const seen = localStorage.getItem(LS_PROMISE_SEEN);
+  const week = isoWeek();
+  if (promiseData?.found && !promiseAccepted() && seen !== week && !location.hash.startsWith('#s=')){
+    localStorage.setItem(LS_PROMISE_SEEN, week);
+    setTimeout(openPromise, 2600);
+  } else if (promiseData?.found && !promiseAccepted()){
+    promiseBtn.classList.add('pulse');   // тихий намёк, что обещание ждёт
+  }
+}
+
 /* --- морф панель <-> кнопка --- */
 const EASE = 'cubic-bezier(.22,.9,.24,1)';
 let panelOpen = false, animating = false;
@@ -2191,9 +2449,13 @@ function closePanel(){
   };
 }
 
-fab.addEventListener('click', openPanel);
-scrim.addEventListener('click', closePanel);
-window.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+fab.addEventListener('click', () => { closePromise(); openPanel(); });
+scrim.addEventListener('click', () => { closePanel(); closePromise(); });
+window.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  closePanel();
+  closePromise();
+});
 
 saveBtn.addEventListener('click', () => {
   const g = currentGender();
@@ -2251,6 +2513,7 @@ if (!sharedMatch){
 
 loadPerson('m');
 loadPerson('f');
+loadPromise();
 
 if (sharedMatch){
   applySharedState(sharedMatch[1]).catch(e => {

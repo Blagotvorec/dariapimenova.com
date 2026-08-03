@@ -1,0 +1,37 @@
+name: Обещание на неделю
+
+# Забирает из телеграм-канала свежее «Обещание на неделю» и кладёт в promise.json,
+# который читает сайт. Секреты не нужны: канал публичный.
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # каждые полчаса
+  workflow_dispatch:          # и по кнопке вручную
+
+permissions:
+  contents: write
+
+concurrency:
+  group: promise
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Прочитать канал
+        run: python3 tools/fetch_promise.py genius_meridian promise.json
+
+      - name: Сохранить, если обещание изменилось
+        run: |
+          if [ -n "$(git status --porcelain promise.json)" ]; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add promise.json
+            git commit -m "Обещание на неделю: обновлено из канала"
+            git push
+          else
+            echo "изменений нет"
+          fi
