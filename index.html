@@ -149,6 +149,57 @@
   #fab svg{width:18px;height:18px;display:block}
   #fab.hidden{opacity:0;pointer-events:none;transform:scale(.4)}
 
+  /* ---------- share ---------- */
+  #shareBtn{
+    position:fixed;right:32px;bottom:92px;z-index:6;
+    width:40px;height:40px;border-radius:50%;
+    appearance:none;cursor:pointer;overflow:hidden;
+    background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.03) 60%);
+    border:1px solid rgba(255,255,255,.2);
+    color:rgba(245,244,240,.75);
+    backdrop-filter:blur(26px) saturate(1.8);
+    -webkit-backdrop-filter:blur(26px) saturate(1.8);
+    box-shadow:0 8px 26px rgba(0,0,0,.5),
+               inset 0 1px 0 rgba(255,255,255,.26);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .35s cubic-bezier(.22,.9,.24,1),opacity .3s,border-color .3s;
+    opacity:.45;
+  }
+  #shareBtn:hover{opacity:1;transform:scale(1.08);border-color:rgba(255,255,255,.36)}
+  #shareBtn:active{transform:scale(.96)}
+  #shareBtn svg{width:16px;height:16px;display:block}
+  #shareBtn .spinner.mini{display:none;width:14px;height:14px;border-width:2px}
+  #shareBtn.busy{opacity:1}
+  #shareBtn.busy svg{display:none}
+  #shareBtn.busy .spinner.mini{display:block}
+
+  #toast{
+    position:fixed;left:50%;bottom:112px;transform:translate(-50%,12px);z-index:9;
+    display:none;align-items:center;gap:12px;
+    max-width:min(520px,88vw);
+    padding:12px 16px;border-radius:16px;
+    background:linear-gradient(150deg,rgba(255,255,255,.12),rgba(255,255,255,.03) 65%);
+    border:1px solid rgba(255,255,255,.2);
+    backdrop-filter:blur(26px) saturate(1.8);
+    -webkit-backdrop-filter:blur(26px) saturate(1.8);
+    box-shadow:0 12px 40px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.24);
+    opacity:0;transition:opacity .35s,transform .35s;
+  }
+  #toast.show{display:flex;opacity:1;transform:translate(-50%,0)}
+  #toast span{
+    font-size:12px;font-weight:300;line-height:1.5;letter-spacing:.03em;
+    color:rgba(245,244,240,.85);
+    overflow:hidden;text-overflow:ellipsis;
+  }
+  #toastCopy{
+    display:none;flex:none;
+    appearance:none;border:0;cursor:pointer;border-radius:10px;
+    background:var(--ink);color:#0a0a0a;
+    font-family:var(--font);font-size:10.5px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;padding:8px 12px;
+  }
+  #toast.with-copy #toastCopy{display:block}
+
   /* ---------- panel ---------- */
   .scrim{
     position:fixed;inset:0;z-index:7;
@@ -345,6 +396,8 @@
     .toggle{bottom:18px;padding:3px}
     .toggle button{font-size:10.5px;padding:8px 16px;letter-spacing:.12em}
     #fab{width:40px;height:40px;right:14px;bottom:72px}
+    #shareBtn{width:36px;height:36px;right:16px;bottom:122px}
+    #toast{bottom:170px;padding:11px 13px}
     #cloudHint{
       bottom:118px;font-size:9.5px;letter-spacing:.1em;
       white-space:normal;max-width:78vw;text-align:center;line-height:1.6;
@@ -381,6 +434,17 @@
   <button data-g="m" class="active">Мужчина</button>
   <button data-g="f">Женщина</button>
 </div>
+
+<button id="shareBtn" aria-label="Поделиться облаком" title="Поделиться облаком">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/>
+    <path d="M14 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/>
+  </svg>
+  <div class="spinner mini"></div>
+</button>
+
+<div id="toast"><span id="toastText"></span><button id="toastCopy">копировать</button></div>
 
 <button id="fab" aria-label="Изменить облако" title="Изменить облако">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
@@ -521,6 +585,8 @@ let personDirty = true;
 function loadImage(src){
   return new Promise((res, rej) => {
     const img = new Image();
+    // чужой хост: без этого холст «пачкается» и пиксели не прочитать
+    if (!/^data:/.test(src)) img.crossOrigin = 'anonymous';
     img.onload = () => res(img);
     img.onerror = rej;
     img.src = src;
@@ -812,21 +878,47 @@ async function cutBackgroundAI(img, onStage){
   const coarse = new Float32Array(mw * mh);
   for (let i = 0; i < mw * mh; i++) coarse[i] = 1 - bg[i];
 
-  // голова = волосы + лицо (для точного центра облака)
+  // Голова: центр и подбородок берём по лицу, а макушку — по волосам.
+  // Длинные волосы, лежащие на плечах, иначе утаскивают центр вниз
+  // и раздувают «голову» на полкадра.
   let headBox = null;
-  if (hair && face){
-    let minX = mw, minY = mh, maxX = -1, maxY = -1, cxs = 0, cnt = 0;
+  if (face){
+    let fMinY = mh, fMaxY = -1, fCx = 0, fCnt = 0;
     for (let y = 0; y < mh; y++)
       for (let x = 0; x < mw; x++){
-        const i = y * mw + x;
-        if (hair[i] + face[i] > 0.55){
-          if (x < minX) minX = x; if (x > maxX) maxX = x;
-          if (y < minY) minY = y; if (y > maxY) maxY = y;
-          cxs += x; cnt++;
+        if (face[y * mw + x] > 0.55){
+          if (y < fMinY) fMinY = y;
+          if (y > fMaxY) fMaxY = y;
+          fCx += x; fCnt++;
         }
       }
-    if (cnt > mw * mh * 0.0015 && maxY > minY)
-      headBox = { cx: cxs / cnt / mw, y0: minY / mh, y1: maxY / mh };
+    if (fCnt > mw * mh * 0.0008 && fMaxY > fMinY){
+      let top = fMinY;
+      if (hair){
+        // макушка — самая верхняя строка волос, но не выше, чем на высоту лица
+        const limit = Math.max(0, fMinY - (fMaxY - fMinY) * 1.1);
+        for (let y = Math.round(limit); y < fMinY; y++){
+          let has = false;
+          for (let x = 0; x < mw && !has; x++) if (hair[y * mw + x] > 0.55) has = true;
+          if (has){ top = y; break; }
+        }
+      }
+      headBox = { cx: fCx / fCnt / mw, y0: top / mh, y1: fMaxY / mh };
+    }
+  }
+  if (!headBox && hair){ // лицо не найдено (профиль, спина) — считаем по волосам
+    let minY = mh, maxY = -1, cxs = 0, cnt = 0;
+    for (let y = 0; y < mh; y++)
+      for (let x = 0; x < mw; x++)
+        if (hair[y * mw + x] > 0.55){
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+          cxs += x; cnt++;
+        }
+    if (cnt > mw * mh * 0.0015 && maxY > minY){
+      const h2 = Math.min(maxY - minY, mh * 0.22);
+      headBox = { cx: cxs / cnt / mw, y0: minY / mh, y1: (minY + h2) / mh };
+    }
   }
 
   if (onStage) await onStage('Уточняем контур и волосы…');
@@ -1006,6 +1098,10 @@ function detectHead(c){
 
 const customKey = g => 'aura_photo_' + g;
 
+// фото, пришедшее по ссылке, главнее дефолтного — чтобы то не перезаписало его,
+// если успеет догрузиться позже
+const sharedPhotoLock = new Set();
+
 async function buildCustomPerson(g, dataURL, onStage){
   const stage = async t => {
     if (onStage){ onStage(t); await new Promise(r => setTimeout(r, 90)); }
@@ -1042,6 +1138,7 @@ async function buildCustomPerson(g, dataURL, onStage){
 async function loadPerson(g){
   const cfg = PEOPLE[g];
   try {
+    if (sharedPhotoLock.has(g)) return;
     const custom = localStorage.getItem(customKey(g));
     if (custom){
       await buildCustomPerson(g, custom);
@@ -1049,6 +1146,7 @@ async function loadPerson(g){
     }
     const img = await loadImage(cfg.src);
     const cut = cutBackground(img, !!cfg.precut);
+    if (sharedPhotoLock.has(g)) return;
     persons[g] = { cv: cut, w: cut.width, h: cut.height, cfg };
     personDirty = true;
     updateMissingHint();
@@ -1883,6 +1981,166 @@ resetBtn.addEventListener('click', () => {
   input.focus();
 });
 
+/* ============================== поделиться ============================== */
+
+/* Ссылка живёт 72 часа: фото уезжает на анонимный хостинг litterbox
+   с трёхдневным сроком хранения, слова и настройки зашиты в саму ссылку. */
+const PHOTO_UPLOAD = {
+  endpoint: 'https://litterbox.catbox.moe/resources/internals/api.php',
+  ttl: '72h',
+  ttlNote: 'ссылка живёт 3 дня'
+};
+
+const shareBtn  = document.getElementById('shareBtn');
+const toastEl   = document.getElementById('toast');
+const toastText = document.getElementById('toastText');
+const toastCopy = document.getElementById('toastCopy');
+let toastTimer = 0;
+
+function showToast(text, { copy = null, ms = 4000 } = {}){
+  toastText.textContent = text;
+  toastEl.classList.toggle('with-copy', !!copy);
+  toastCopy.onclick = copy ? () => {
+    navigator.clipboard?.writeText(copy).then(
+      () => showToast('Ссылка скопирована'),
+      () => {}
+    );
+  } : null;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  if (ms) toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
+
+/* --- упаковка состояния в адрес страницы --- */
+function bytesToB64url(bytes){
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000)
+    s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlToBytes(str){
+  const s = str.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(s + '==='.slice((s.length + 3) % 4));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function encodeState(obj){
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  if (window.CompressionStream){
+    try {
+      const stream = new Blob([bytes]).stream()
+        .pipeThrough(new CompressionStream('deflate-raw'));
+      const buf = await new Response(stream).arrayBuffer();
+      return 'z' + bytesToB64url(new Uint8Array(buf));
+    } catch {}
+  }
+  return 'p' + bytesToB64url(bytes);
+}
+async function decodeState(str){
+  const mode = str[0], bytes = b64urlToBytes(str.slice(1));
+  let raw = bytes;
+  if (mode === 'z'){
+    const stream = new Blob([bytes]).stream()
+      .pipeThrough(new DecompressionStream('deflate-raw'));
+    raw = new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  return JSON.parse(new TextDecoder().decode(raw));
+}
+
+/* --- отправка фото на хостинг --- */
+async function prepareSharePhoto(dataURL){
+  const img = await loadImage(dataURL);
+  const k = Math.min(1, 900 / img.naturalHeight);
+  const c = document.createElement('canvas');
+  c.width  = Math.max(1, Math.round(img.naturalWidth * k));
+  c.height = Math.max(1, Math.round(img.naturalHeight * k));
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  return new Promise(res => c.toBlob(res, 'image/jpeg', 0.72));
+}
+
+async function uploadPhoto(blob){
+  const fd = new FormData();
+  fd.append('reqtype', 'fileupload');
+  fd.append('time', PHOTO_UPLOAD.ttl);
+  fd.append('fileToUpload', blob, 'aura.jpg');
+  const res = await fetch(PHOTO_UPLOAD.endpoint, { method: 'POST', body: fd });
+  const url = (await res.text()).trim();
+  if (!/^https?:\/\/\S+$/.test(url)) throw new Error('upload failed: ' + url.slice(0, 80));
+  return url;
+}
+
+/* --- сборка ссылки --- */
+async function buildShareLink(){
+  const g = currentGender();
+  const state = { v: 1, g, w: userWords[g] || '', t: cloudTf[g] };
+  const wt = userWeights[g];
+  if (wt) state.q = [...wt.entries()].map(([k, v]) => [k, +v.toFixed(2)]);
+
+  const photo = localStorage.getItem(customKey(g));
+  if (photo){
+    showToast('Загружаем фото…', { ms: 0 });
+    state.p = await uploadPhoto(await prepareSharePhoto(photo));
+  }
+  const base = location.origin + location.pathname;
+  return { url: base + '#s=' + await encodeState(state), withPhoto: !!photo };
+}
+
+shareBtn.addEventListener('click', async () => {
+  if (shareBtn.classList.contains('busy')) return;
+  shareBtn.classList.add('busy');
+  try {
+    const { url } = await buildShareLink();
+    const note = ' · ' + PHOTO_UPLOAD.ttlNote;
+    if (navigator.share && window.matchMedia('(pointer: coarse)').matches){
+      try { await navigator.share({ title: 'ЧЕМ ДУХ НАПОЛНЕН', url }); }
+      catch { /* пользователь закрыл системное окно */ }
+      showToast('Ссылка готова' + note, { copy: url });
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast('Ссылка скопирована' + note, { copy: url });
+      } catch {
+        showToast('Ссылка готова' + note, { copy: url, ms: 12000 });
+      }
+    }
+  } catch (e){
+    console.warn('Не удалось создать ссылку', e);
+    showToast('Не получилось создать ссылку — попробуйте ещё раз');
+  } finally {
+    shareBtn.classList.remove('busy');
+  }
+});
+
+/* --- открытие чужой ссылки --- */
+function setGenderUI(g, instant){
+  genderTarget = g === 'f' ? 1 : 0;
+  if (instant) genderMix = genderTarget;
+  toggle.classList.toggle('f', g === 'f');
+  toggle.querySelectorAll('button').forEach(b =>
+    b.classList.toggle('active', b.dataset.g === g));
+}
+
+async function applySharedState(str){
+  const st = await decodeState(str);
+  const g = st.g === 'f' ? 'f' : 'm';
+  setGenderUI(g, true);
+  if (st.t && typeof st.t.s === 'number') cloudTf[g] = st.t;
+  userWords[g] = st.w || '';
+  userWeights[g] = st.q ? new Map(st.q) : null;
+  input.value = userWords[g];
+  updateCounter();
+  refreshCloud();
+
+  if (st.p){
+    sharedPhotoLock.add(g);
+    showToast('Открываем облако…', { ms: 0 });
+    await buildCustomPerson(g, st.p, t => showToast(t, { ms: 0 }));
+    toastEl.classList.remove('show');
+  }
+}
+
 /* --- морф панель <-> кнопка --- */
 const EASE = 'cubic-bezier(.22,.9,.24,1)';
 let panelOpen = false, animating = false;
@@ -1976,18 +2234,30 @@ updateCounter();
 refreshCloud();
 updatePhotoReset();
 
-// один раз показываем, что у облака есть центр, который можно двигать
-setTimeout(() => {
-  hintEl.textContent = window.matchMedia('(pointer: coarse)').matches
-    ? 'центр облака можно двигать пальцем · щипок — размер'
-    : 'перетащите центр — двигать облако · колесо — размер';
-  flashHandle(2600);
-  hintEl.classList.add('show');
-  setTimeout(() => hintEl.classList.remove('show'), 3600);
-}, 1800);
+// пришли по чужой ссылке — показываем её облако вместо своего
+const sharedMatch = location.hash.match(/^#s=(.+)$/);
+
+if (!sharedMatch){
+  // один раз показываем, что у облака есть центр, который можно двигать
+  setTimeout(() => {
+    hintEl.textContent = window.matchMedia('(pointer: coarse)').matches
+      ? 'центр облака можно двигать пальцем · щипок — размер'
+      : 'перетащите центр — двигать облако · колесо — размер';
+    flashHandle(2600);
+    hintEl.classList.add('show');
+    setTimeout(() => hintEl.classList.remove('show'), 3600);
+  }, 1800);
+}
 
 loadPerson('m');
 loadPerson('f');
+
+if (sharedMatch){
+  applySharedState(sharedMatch[1]).catch(e => {
+    console.warn('Ссылка не открылась', e);
+    showToast('Ссылка устарела или повреждена — фото хранится 3 дня');
+  });
+}
 
 requestAnimationFrame(frame);
 </script>
