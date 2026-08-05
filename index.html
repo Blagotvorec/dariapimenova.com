@@ -185,6 +185,274 @@
   #lessonGet:hover{box-shadow:0 18px 50px rgba(150,170,255,.34)}
   #lessonGet:active{transform:scale(.985)}
 
+  #lessonBack{
+    display:none;align-items:center;gap:6px;
+    margin-bottom:12px;padding:7px 13px 7px 9px;border-radius:999px;
+    appearance:none;cursor:pointer;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.14);
+    color:rgba(245,244,240,.62);
+    font-family:var(--font);font-size:9.5px;font-weight:400;
+    letter-spacing:.16em;text-transform:uppercase;
+    transition:background .3s,color .3s,transform .3s cubic-bezier(.34,1.4,.4,1);
+  }
+  #lessonBack.on{display:inline-flex}
+  #lessonBack:hover{background:rgba(255,255,255,.12);color:var(--ink)}
+  #lessonBack:active{transform:scale(.96)}
+  #lessonBack svg{width:12px;height:12px}
+
+  #lessonDesc{
+    display:none;margin-top:16px;
+    font-size:13px;font-weight:300;line-height:1.65;letter-spacing:.01em;
+    color:rgba(245,244,240,.66);
+  }
+  #lessonDesc.on{display:block}
+  #lessonGet.off{display:none}
+  #lessonDone{
+    display:none;margin-top:12px;width:100%;
+    appearance:none;cursor:pointer;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,224,178,.34);
+    color:rgba(255,236,200,.9);
+    font-family:var(--font);font-size:11.5px;font-weight:500;
+    letter-spacing:.2em;text-transform:uppercase;
+    padding:15px;border-radius:15px;
+    transition:background .3s,border-color .3s,transform .3s cubic-bezier(.34,1.4,.4,1);
+  }
+  #lessonDone.on{display:block}
+  #lessonDone:hover{background:rgba(255,224,178,.14);border-color:rgba(255,224,178,.6)}
+  #lessonDone:active{transform:scale(.985)}
+  #lessonPanel .lesson-in{max-height:80vh;overflow-y:auto;scrollbar-width:none}
+  #lessonPanel .lesson-in::-webkit-scrollbar{display:none}
+
+  /* ---------- «Путь спасения»: список уроков ---------- */
+  #coursePanel{
+    pointer-events:auto;
+    position:relative;overflow:hidden;
+    width:min(520px,100%);
+    border-radius:34px;
+    background:rgba(18,15,12,.5);
+    border:1px solid rgba(255,255,255,.13);
+    backdrop-filter:blur(46px) saturate(2.2);
+    -webkit-backdrop-filter:blur(46px) saturate(2.2);
+    box-shadow:0 46px 130px rgba(0,0,0,.85),
+               inset 0 1px 0 rgba(255,255,255,.34),
+               inset 0 -46px 90px rgba(255,255,255,.04);
+    padding:30px 26px 24px;
+    display:none;will-change:transform;
+  }
+  #coursePanel.visible{display:block}
+  #coursePanel.settle{animation:dropSettle 1.25s cubic-bezier(.22,.9,.24,1)}
+  #coursePanel::after{
+    content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
+    background:conic-gradient(from var(--rim),
+      rgba(255,255,255,.6),rgba(255,214,150,.55),rgba(255,170,120,.34),
+      rgba(255,236,190,.28),rgba(255,255,255,.05),rgba(255,255,255,.6));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    mask-composite:exclude;
+    animation:rimFlow 18s linear infinite;
+    pointer-events:none;z-index:4;
+  }
+  #coursePanel::before{
+    content:'';position:absolute;left:8%;right:8%;top:0;height:50%;
+    background:radial-gradient(120% 100% at 50% 0,rgba(255,255,255,.2),rgba(255,255,255,0) 62%);
+    pointer-events:none;z-index:3;border-radius:inherit;
+  }
+  .liq.warm .q1{background:radial-gradient(circle,rgba(255,196,110,.72),transparent 68%)}
+  .liq.warm .q2{background:radial-gradient(circle,rgba(255,150,96,.6),transparent 68%)}
+  .liq.warm .q3{background:radial-gradient(circle,rgba(255,226,160,.5),transparent 68%)}
+  .liq.warm .q4{background:radial-gradient(circle,rgba(214,160,255,.34),transparent 68%)}
+
+  /* блики, как от света сквозь толщу жидкости */
+  .caustic{
+    position:absolute;inset:-20%;z-index:1;pointer-events:none;opacity:.5;
+    background:
+      radial-gradient(38% 22% at 30% 26%,rgba(255,255,255,.18),transparent 60%),
+      radial-gradient(30% 16% at 72% 44%,rgba(255,255,255,.14),transparent 60%),
+      radial-gradient(26% 14% at 44% 74%,rgba(255,255,255,.12),transparent 60%);
+    filter:blur(14px);
+    animation:causticDrift 19s ease-in-out infinite;
+  }
+  @keyframes causticDrift{
+    0%,100%{transform:translate(0,0) scale(1)}
+    33%{transform:translate(5%,-4%) scale(1.12)}
+    66%{transform:translate(-4%,5%) scale(.94)}
+  }
+
+  .course-top em{
+    display:block;font-style:normal;
+    font-size:9.5px;font-weight:300;letter-spacing:.28em;text-transform:uppercase;
+    color:rgba(255,220,170,.45);
+  }
+  #coursePanel h2{
+    margin-top:7px;
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:26px;font-weight:500;letter-spacing:.03em;color:#fdf8ee;
+  }
+  .lessons{margin-top:20px;display:flex;flex-direction:column;gap:9px}
+  .lcard{
+    position:relative;overflow:hidden;
+    appearance:none;cursor:pointer;text-align:left;
+    display:flex;align-items:center;gap:14px;
+    padding:15px 15px 15px 17px;border-radius:18px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.12);
+    color:var(--ink);
+    transition:transform .32s cubic-bezier(.34,1.4,.4,1),background .3s,border-color .3s;
+  }
+  /* по карточке медленно проходит светлая волна */
+  .lcard::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.09) 50%,transparent 60%);
+    background-size:280% 100%;
+    animation:cardWave 9s ease-in-out infinite;
+  }
+  @keyframes cardWave{0%,100%{background-position:130% 0}55%{background-position:-30% 0}}
+  .lcard:hover{background:rgba(255,255,255,.1);border-color:rgba(255,214,150,.4)}
+  .lcard:active{transform:scale(.985)}
+  .lcard .num{
+    flex:none;width:26px;height:26px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:600;letter-spacing:.02em;
+    background:linear-gradient(140deg,rgba(255,255,255,.16),rgba(255,255,255,.04));
+    border:1px solid rgba(255,255,255,.14);
+    color:rgba(255,232,190,.9);
+  }
+  .lcard .nm{
+    flex:1;min-width:0;
+    font-size:13px;font-weight:400;line-height:1.35;letter-spacing:.02em;
+  }
+  .lcard .badge{
+    flex:none;display:inline-flex;align-items:center;gap:5px;
+    padding:7px 11px;border-radius:999px;
+    font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    background:linear-gradient(135deg,#ffd98a,#ffb86b);
+    color:#3a2a10;
+    box-shadow:0 6px 18px rgba(255,180,90,.22),inset 0 1px 0 rgba(255,255,255,.55);
+  }
+  .lcard .badge svg{width:10px;height:10px}
+  .lcard.locked{cursor:default;opacity:.5}
+  .lcard.locked::after{animation:none}
+  .lcard.locked:hover{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.12)}
+  .lcard.locked .badge{
+    background:rgba(255,255,255,.08);
+    color:rgba(245,244,240,.5);
+    box-shadow:none;border:1px solid rgba(255,255,255,.12);
+  }
+  .lcard.locked .num{color:rgba(245,244,240,.4)}
+  .course-note{
+    margin-top:16px;text-align:center;
+    font-size:9.5px;font-weight:300;letter-spacing:.14em;text-transform:uppercase;
+    color:rgba(245,244,240,.26);
+  }
+
+  /* ---------- окно задания: стекло с толщиной ---------- */
+  #taskPanel{
+    pointer-events:auto;
+    position:relative;overflow:hidden;
+    width:min(500px,100%);
+    border-radius:36px;
+    background:rgba(15,16,22,.46);
+    backdrop-filter:blur(50px) saturate(2.3);
+    -webkit-backdrop-filter:blur(50px) saturate(2.3);
+    border:1px solid rgba(255,255,255,.1);
+    /* толща стекла: свет сверху, тень снизу, мягкая внутренняя глубина */
+    box-shadow:0 50px 140px rgba(0,0,0,.88),
+               inset 0 1.5px 0 rgba(255,255,255,.42),
+               inset 0 -1px 0 rgba(255,255,255,.08),
+               inset 22px 0 60px rgba(255,255,255,.035),
+               inset -22px 0 60px rgba(0,0,0,.22),
+               inset 0 -60px 90px rgba(0,0,0,.2);
+    padding:32px 28px 26px;
+    display:none;will-change:transform;
+  }
+  #taskPanel.visible{display:block}
+  #taskPanel.settle{animation:dropSettle 1.3s cubic-bezier(.22,.9,.24,1)}
+  /* направленный блик: ярко в левом верхнем углу, гаснет к правому нижнему */
+  #taskPanel::before{
+    content:'';position:absolute;inset:0;border-radius:inherit;z-index:3;pointer-events:none;
+    background:
+      radial-gradient(90% 60% at 16% -8%,rgba(255,255,255,.26),rgba(255,255,255,0) 58%),
+      radial-gradient(70% 50% at 92% 108%,rgba(150,190,255,.12),rgba(255,255,255,0) 60%);
+  }
+  #taskPanel::after{
+    content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
+    background:conic-gradient(from var(--rim),
+      rgba(255,255,255,.65),rgba(190,215,255,.5),rgba(214,186,255,.34),
+      rgba(255,236,190,.3),rgba(255,255,255,.06),rgba(255,255,255,.65));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    mask-composite:exclude;
+    animation:rimFlow 20s linear infinite;
+    pointer-events:none;z-index:4;
+  }
+  /* мельчайшее зерно — поверхность перестаёт быть стерильной */
+  .grain{
+    position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.055;
+    background-image:radial-gradient(rgba(255,255,255,.9) .5px,transparent .5px);
+    background-size:3px 3px;
+    mix-blend-mode:overlay;
+  }
+
+  .task-lead{
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:20px;font-weight:500;line-height:1.4;letter-spacing:.02em;
+    color:#fbf8f2;
+  }
+  .task-sub{
+    margin-top:10px;font-size:13px;font-weight:300;line-height:1.6;
+    color:rgba(245,244,240,.6);
+  }
+  /* внутренняя карточка — своя толщина, лежит в углублении */
+  .task-card{
+    margin-top:18px;padding:18px 18px 16px;border-radius:20px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.1);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.22),
+               inset 0 -14px 26px rgba(0,0,0,.18),
+               0 10px 30px rgba(0,0,0,.28);
+  }
+  .task-card h3{
+    font-size:10px;font-weight:400;letter-spacing:.2em;text-transform:uppercase;
+    color:rgba(255,224,178,.6);
+  }
+  .task-card ul{margin-top:12px;display:flex;flex-direction:column;gap:11px}
+  .task-card li{
+    display:flex;gap:11px;align-items:flex-start;
+    font-size:13px;font-weight:300;line-height:1.55;color:rgba(245,244,240,.82);
+  }
+  .task-card li i{
+    flex:none;width:19px;height:19px;margin-top:1px;border-radius:7px;
+    display:flex;align-items:center;justify-content:center;font-style:normal;
+    font-size:10px;font-weight:600;
+    background:linear-gradient(140deg,rgba(255,236,190,.9),rgba(255,200,140,.75));
+    color:#3a2a10;
+  }
+  .task-card li b{font-weight:500;color:rgba(250,248,242,.95)}
+  .task-wait{
+    margin-top:16px;display:flex;gap:9px;align-items:flex-start;
+    font-size:12px;font-weight:300;line-height:1.55;color:rgba(245,244,240,.5);
+  }
+  #taskWrite{
+    margin-top:20px;width:100%;
+    appearance:none;border:0;cursor:pointer;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#cfe0ff,#e9dcff 52%,#ffeecb);
+    color:#161a26;
+    font-family:var(--font);font-size:12.5px;font-weight:700;
+    letter-spacing:.2em;text-transform:uppercase;
+    padding:17px;border-radius:16px;
+    box-shadow:0 16px 44px rgba(150,175,255,.22),inset 0 1px 0 rgba(255,255,255,.75);
+    transition:transform .3s cubic-bezier(.34,1.4,.4,1),box-shadow .3s;
+  }
+  #taskWrite:hover{box-shadow:0 20px 54px rgba(150,175,255,.36)}
+  #taskWrite:active{transform:scale(.985)}
+  .task-who{
+    margin-top:11px;text-align:center;
+    font-size:10px;font-weight:300;letter-spacing:.14em;
+    color:rgba(245,244,240,.32);
+  }
+
   /* ---------- статистика ---------- */
   .stats{
     display:none;align-items:center;gap:7px;margin-top:9px;
@@ -1041,8 +1309,13 @@
   <div id="lessonPanel">
     <div class="liq" aria-hidden="true"><i class="q1"></i><i class="q2"></i><i class="q3"></i><i class="q4"></i></div>
     <div class="lesson-in">
-      <h2>Тайна Библии</h2>
-      <div class="lesson-sub">первый урок · запись вебинара</div>
+      <button id="lessonBack" aria-label="К урокам">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+        <span>к урокам</span>
+      </button>
+      <h2 id="lessonTitle">Тайна Библии</h2>
+      <div class="lesson-sub" id="lessonSub">первый урок · запись вебинара</div>
 
       <div class="seg" id="lessonSrc">
         <span class="seg-fill"></span>
@@ -1052,7 +1325,52 @@
 
       <div class="player" id="lessonPlayer"><div class="wait">плеер загружается…</div></div>
 
+      <p id="lessonDesc"></p>
       <button id="lessonGet">Получить доступ</button>
+      <button id="lessonDone">Я прошёл урок</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel-wrap" id="taskWrap">
+  <div id="taskPanel">
+    <div class="liq" aria-hidden="true"><i class="q1"></i><i class="q2"></i><i class="q3"></i><i class="q4"></i></div>
+    <div class="caustic" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="lesson-in">
+      <div class="task-lead">Ты прошёл первый шаг на пути духовного обучения</div>
+      <div class="task-sub">Это только начало, и впереди — ещё больше глубины и откровений.
+        Чтобы перейти к следующему уроку, нужно выполнить небольшое задание.</div>
+
+      <div class="task-card">
+        <h3>прикрепи в сообщении куратору</h3>
+        <ul>
+          <li><i>1</i><span><b>Свой конспект</b> — можно в формате PDF, фото или текстом</span></li>
+          <li><i>2</i><span><b>Обратную связь</b> — что нового ты узнал, что тебя вдохновило,
+            что берёшь на практику</span></li>
+        </ul>
+      </div>
+
+      <div class="task-wait"><span>⏳</span><span>Как только куратор проверит и одобрит твои
+        материалы, тебе будет открыт доступ к следующему уроку.</span></div>
+
+      <button id="taskWrite">Написать куратору</button>
+      <div class="task-who">@vashe_velikolepie</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel-wrap" id="courseWrap">
+  <div id="coursePanel">
+    <div class="liq warm" aria-hidden="true"><i class="q1"></i><i class="q2"></i><i class="q3"></i><i class="q4"></i></div>
+    <div class="caustic" aria-hidden="true"></div>
+    <div class="lesson-in">
+      <div class="course-top">
+        <em>крест · любовь Христа</em>
+        <h2>Путь спасения</h2>
+      </div>
+      <div class="lessons" id="courseList"></div>
+      <div class="course-note">следующие уроки открываются по мере прохождения</div>
     </div>
   </div>
 </div>
@@ -2924,32 +3242,70 @@ async function applySharedState(str){
 
 /* ============================== «Наполнить»: первый урок ============================== */
 
-const LESSON = {
-  yt: 'https://www.youtube-nocookie.com/embed/y172cEmiFig?rel=0&modestbranding=1',
-  // приватное видео RuTube: в присланной ссылке два «?» подряд, токен p —
-  // это 9cOyCOZ7dRxIYCqoWPLTSQ, а r=plemwd лишь метка перехода
-  rt: 'https://rutube.ru/play/embed/4f4bf674bcfa904688ccba6cd7bd5eac/?p=9cOyCOZ7dRxIYCqoWPLTSQ',
-  // куда ведёт «Получить доступ» — уточнить у Антона
-  get: 'https://t.me/genius_meridian'
+/* Плееры. У приватных видео RuTube в присланных ссылках два «?» подряд:
+   p — токен доступа, r — лишь метка перехода, её отбрасываем. */
+const ytUrl = id => 'https://www.youtube-nocookie.com/embed/' + id + '?rel=0&modestbranding=1';
+const rtUrl = (id, p) => 'https://rutube.ru/play/embed/' + id + (p ? '/?p=' + p : '');
+
+const WEBINAR = {
+  title: 'Тайна Библии',
+  sub:   'первый урок · запись вебинара',
+  yt: 'y172cEmiFig',
+  rt: '4f4bf674bcfa904688ccba6cd7bd5eac', p: '9cOyCOZ7dRxIYCqoWPLTSQ',
+  cta: true
 };
+
+const COURSE = {
+  lessons: [
+    { n: 1, title: 'Принцип сотворения',
+      sub: 'урок 1 · путь спасения',
+      desc: 'Как познать Бога? Возможно ли это, если Он — Всемогущий и Непостижимый? ' +
+            'В этом уроке вы узнаете, почему Бог — наша жизненная необходимость, ' +
+            'что значит быть созданным по Его образу и как Божье Слово способно ' +
+            'преобразить вашу жизнь.',
+      yt: 'kP0pXnVzPyE',
+      rt: '8894aa0ab9fae3d99b6315dbdeeebef9', p: 'AumKRKh7jVHriDSrZMDWCg',
+      open: true },
+    { n: 2, title: 'Коренная проблема и состояние мира', open: false },
+    { n: 3, title: 'Состояние неверующего', open: false }
+  ]
+};
+
+const ICON_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/>' +
+  '<path d="M8 10.5V7a4 4 0 0 1 7.5-1.9"/></svg>';
+const ICON_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/>' +
+  '<path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>';
 
 const fillBtn      = document.getElementById('fillBtn');
 const lessonPanel  = document.getElementById('lessonPanel');
 const lessonPlayer = document.getElementById('lessonPlayer');
 const lessonSrc    = document.getElementById('lessonSrc');
 const lessonGet    = document.getElementById('lessonGet');
+const lessonBack   = document.getElementById('lessonBack');
+const lessonTitle  = document.getElementById('lessonTitle');
+const lessonSub    = document.getElementById('lessonSub');
+const lessonDesc   = document.getElementById('lessonDesc');
+const lessonDone   = document.getElementById('lessonDone');
+const coursePanel  = document.getElementById('coursePanel');
+const courseList   = document.getElementById('courseList');
+const taskPanel    = document.getElementById('taskPanel');
+const taskWrite    = document.getElementById('taskWrite');
 
-let lessonOpen = false, lessonWhich = 'yt', lessonLoaded = false;
+const CURATOR = 'https://t.me/vashe_velikolepie';
+
+let lessonOpen = false, courseOpen = false, taskOpen = false;
+let lessonWhich = 'yt', lessonLoaded = false, lessonItem = WEBINAR, cameFromCourse = false;
 
 function mountPlayer(which){
   lessonWhich = which;
   lessonPlayer.innerHTML = '';
   const f = document.createElement('iframe');
-  f.src = LESSON[which];
+  f.src = which === 'yt' ? ytUrl(lessonItem.yt) : rtUrl(lessonItem.rt, lessonItem.p);
   f.allow = 'accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
   f.allowFullscreen = true;
   f.referrerPolicy = 'strict-origin-when-cross-origin';
-  f.loading = 'lazy';
   lessonPlayer.appendChild(f);
   lessonLoaded = true;
 }
@@ -2965,50 +3321,173 @@ lessonSrc.addEventListener('click', e => {
   if (b.dataset.v !== lessonWhich) mountPlayer(b.dataset.v);
 });
 
-lessonGet.addEventListener('click', () => {
-  window.open(LESSON.get, '_blank', 'noopener');
-});
-
-function lessonMorph(open){
+/* ---------- окно урока ---------- */
+function lessonMorph(open, fromEl){
   const pr = lessonPanel.getBoundingClientRect();
-  const br = fillBtn.getBoundingClientRect();
+  const br = fromEl.getBoundingClientRect();
   const dx = (br.left + br.width / 2) - (pr.left + pr.width / 2);
   const dy = (br.top + br.height / 2) - (pr.top + pr.height / 2);
   const s = Math.max(0.06, br.width / pr.width);
   const small = { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 0.15 };
   const full  = { transform: 'translate(0, 0) scale(1)', opacity: 1 };
   return lessonPanel.animate(open ? [small, full] : [full, small],
-    { duration: open ? 640 : 520, easing: EASE });
+    { duration: open ? 640 : 500, easing: EASE });
 }
 
-function openLesson(){
-  if (lessonOpen || panelOpen) return;
-  closePromise(); closeGive();
+function showLesson(item, fromCourse, fromEl){
+  lessonItem = item;
+  cameFromCourse = !!fromCourse;
+  lessonTitle.textContent = item.title;
+  lessonSub.textContent = item.sub || '';
+  lessonDesc.textContent = item.desc || '';
+  lessonDesc.classList.toggle('on', !!item.desc);
+  lessonGet.classList.toggle('off', !item.cta);
+  lessonDone.classList.toggle('on', !!fromCourse);
+  lessonBack.classList.toggle('on', !!fromCourse);
+
   lessonOpen = true;
   lessonPanel.classList.add('visible');
   scrim.classList.add('on');
-  // плеер поднимаем только сейчас: до открытия видео не грузится
-  if (!lessonLoaded) mountPlayer(lessonWhich);
+  mountPlayer(lessonWhich);
   setSeg(lessonSrc, lessonWhich);
   lessonPanel.classList.remove('settle');
   void lessonPanel.offsetWidth;
   lessonPanel.classList.add('settle');
-  lessonMorph(true);
+  lessonMorph(true, fromEl || fillBtn);
 }
 
-function closeLesson(){
+function openLesson(){
+  if (lessonOpen || panelOpen) return;
+  closePromise(); closeGive(); closeCourse(true); closeTask(true);
+  showLesson(WEBINAR, false, fillBtn);
+}
+
+function closeLesson(keepScrim){
   if (!lessonOpen) return;
   lessonOpen = false;
-  scrim.classList.remove('on');
-  lessonMorph(false).onfinish = () => {
+  if (!keepScrim) scrim.classList.remove('on');
+  lessonMorph(false, cameFromCourse ? coursePanel : fillBtn).onfinish = () => {
     if (!lessonOpen){
       lessonPanel.classList.remove('visible', 'settle');
-      unmountPlayer();          // останавливаем воспроизведение
+      unmountPlayer();                 // останавливаем воспроизведение
     }
   };
 }
 
 fillBtn.addEventListener('click', openLesson);
+
+/* ---------- окно курса ---------- */
+function renderCourse(){
+  courseList.innerHTML = '';
+  COURSE.lessons.forEach(it => {
+    const b = document.createElement('button');
+    b.className = 'lcard' + (it.open ? '' : ' locked');
+    b.dataset.n = it.n;
+    b.innerHTML =
+      '<span class="num"></span><span class="nm"></span>' +
+      '<span class="badge">' + (it.open ? 'открыто' + ICON_OPEN : 'скоро' + ICON_LOCK) + '</span>';
+    b.querySelector('.num').textContent = it.n;
+    b.querySelector('.nm').textContent = it.title;
+    courseList.appendChild(b);
+  });
+}
+
+courseList.addEventListener('click', e => {
+  const b = e.target.closest('.lcard'); if (!b) return;
+  const it = COURSE.lessons.find(x => x.n === +b.dataset.n);
+  if (!it || !it.open){
+    closeCourse(true);
+    openTask(b);            // рассказываем, как открыть следующий урок
+    return;
+  }
+  closeCourse(true);
+  showLesson(it, true, b);
+});
+
+function courseMorph(open, fromEl){
+  const pr = coursePanel.getBoundingClientRect();
+  const br = fromEl.getBoundingClientRect();
+  const dx = (br.left + br.width / 2) - (pr.left + pr.width / 2);
+  const dy = (br.top + br.height / 2) - (pr.top + pr.height / 2);
+  const s = Math.max(0.06, br.width / pr.width);
+  const small = { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 0.15 };
+  const full  = { transform: 'translate(0, 0) scale(1)', opacity: 1 };
+  return coursePanel.animate(open ? [small, full] : [full, small],
+    { duration: open ? 640 : 500, easing: EASE });
+}
+
+function openCourse(fromEl){
+  if (courseOpen) return;
+  courseOpen = true;
+  renderCourse();
+  coursePanel.classList.add('visible');
+  scrim.classList.add('on');
+  coursePanel.classList.remove('settle');
+  void coursePanel.offsetWidth;
+  coursePanel.classList.add('settle');
+  courseMorph(true, fromEl || fillBtn);
+}
+
+function closeCourse(keepScrim){
+  if (!courseOpen) return;
+  courseOpen = false;
+  if (!keepScrim) scrim.classList.remove('on');
+  courseMorph(false, fillBtn).onfinish = () => {
+    if (!courseOpen) coursePanel.classList.remove('visible', 'settle');
+  };
+}
+
+lessonGet.addEventListener('click', () => {
+  closeLesson(true);
+  openCourse(lessonGet);
+});
+
+lessonBack.addEventListener('click', () => {
+  closeLesson(true);
+  openCourse(lessonBack);
+});
+
+/* ---------- окно задания ---------- */
+function taskMorph(open, fromEl){
+  const pr = taskPanel.getBoundingClientRect();
+  const br = fromEl.getBoundingClientRect();
+  const dx = (br.left + br.width / 2) - (pr.left + pr.width / 2);
+  const dy = (br.top + br.height / 2) - (pr.top + pr.height / 2);
+  const s = Math.max(0.06, br.width / pr.width);
+  const small = { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 0.15 };
+  const full  = { transform: 'translate(0, 0) scale(1)', opacity: 1 };
+  return taskPanel.animate(open ? [small, full] : [full, small],
+    { duration: open ? 660 : 500, easing: EASE });
+}
+
+function openTask(fromEl){
+  if (taskOpen) return;
+  taskOpen = true;
+  taskPanel.classList.add('visible');
+  scrim.classList.add('on');
+  taskPanel.classList.remove('settle');
+  void taskPanel.offsetWidth;
+  taskPanel.classList.add('settle');
+  taskMorph(true, fromEl || fillBtn);
+}
+
+function closeTask(keepScrim){
+  if (!taskOpen) return;
+  taskOpen = false;
+  if (!keepScrim) scrim.classList.remove('on');
+  taskMorph(false, fillBtn).onfinish = () => {
+    if (!taskOpen) taskPanel.classList.remove('visible', 'settle');
+  };
+}
+
+lessonDone.addEventListener('click', () => {
+  closeLesson(true);
+  openTask(lessonDone);
+});
+
+taskWrite.addEventListener('click', () => {
+  window.open(CURATOR, '_blank', 'noopener');
+});
 
 /* ============================== кто уже заходил ============================== */
 
@@ -3018,7 +3497,8 @@ fillBtn.addEventListener('click', openLesson);
 const STATS = {
   hit:   'https://abacus.jasoncameron.dev/hit/dariapimenova/visits',
   get:   'https://abacus.jasoncameron.dev/get/dariapimenova/visits',
-  blob:  'https://jsonblob.com/api/jsonBlob/019fd244-54c2-7283-89c2-117ba77f32a2',
+  blob:   'https://jsonblob.com/api/jsonBlob/019fd244-54c2-7283-89c2-117ba77f32a2',
+  mirror: 'https://jsonblob.com/api/jsonBlob/019fd34d-bbaf-7e2a-ae98-2a5a3a5b6534',
   flag:  code => 'https://flagcdn.com/w320/' + code.toLowerCase() + '.png',
   flagBig: code => 'https://flagcdn.com/w640/' + code.toLowerCase() + '.png',
   tiny:  code => 'https://flagcdn.com/w40/' + code.toLowerCase() + '.png',
@@ -3079,29 +3559,96 @@ function normCountries(raw){
   return out;
 }
 
-async function loadCountries(){
-  const res = await fetch(STATS.blob, { cache: 'no-store' });
-  const etag = res.headers.get('ETag');
-  const data = await res.json();
-  return { c: normCountries(data && data.c), etag };
+/* Статистика хранится в трёх местах сразу: основное хранилище, запасное и
+   слепок в памяти браузера. При каждом запуске все три сверяются и сводятся
+   по наибольшему значению — если какое-то обнулилось или отстало, оно
+   молча чинится из остальных. Счётчики только растут, вниз не идут. */
+const LS_SNAP = 'aura_stats_v2';
+
+function mergeCountries(...srcs){
+  const out = {};
+  for (const src of srcs){
+    if (!src) continue;
+    for (const k in src){
+      const v = src[k];
+      if (!v || typeof v.n !== 'number' || v.n < 1) continue;
+      if (!out[k]) out[k] = { n: v.n, t: v.t || 0 };
+      else {
+        out[k].n = Math.max(out[k].n, v.n);
+        const ta = out[k].t, tb = v.t || 0;      // время первого прихода — раннее
+        out[k].t = (ta && tb) ? Math.min(ta, tb) : (ta || tb);
+      }
+    }
+  }
+  return out;
 }
 
-/* Прибавляет человека к своей стране. При одновременной записи двоих
-   сервер вернёт 412 — тогда перечитываем свежие данные и прибавляем снова,
-   так что ничей голос не теряется. */
+const readSnap = () => {
+  try { return normCountries(JSON.parse(localStorage.getItem(LS_SNAP) || '{}')); }
+  catch { return {}; }
+};
+const saveSnap = c => { try { localStorage.setItem(LS_SNAP, JSON.stringify(c)); } catch {} };
+
+function sameCounts(a, b){
+  const ka = Object.keys(a), kb = Object.keys(b);
+  return ka.length === kb.length && ka.every(k => b[k] && b[k].n === a[k].n);
+}
+
+function putCountries(url, c, etag){
+  return fetch(url, {
+    method: 'PUT',
+    headers: Object.assign({ 'Content-Type': 'application/json' },
+                           etag ? { 'If-Match': etag } : {}),
+    body: JSON.stringify({ v: 2, c })
+  });
+}
+
+async function readOne(url){
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return { c: null, etag: null };
+    const etag = res.headers.get('ETag');
+    const data = await res.json();
+    return { c: normCountries(data && data.c), etag };
+  } catch { return { c: null, etag: null }; }
+}
+
+async function loadCountries(){
+  const [main, mirror] = await Promise.all([readOne(STATS.blob), readOne(STATS.mirror)]);
+  const snap = readSnap();
+  const merged = mergeCountries(main.c, mirror.c, snap);
+
+  // чиним то, что отстало или обнулилось
+  let healed = null;
+  if (main.c && !sameCounts(main.c, merged)){
+    healed = 'основное';
+    putCountries(STATS.blob, merged, main.etag).catch(() => {});
+  }
+  if (mirror.c && !sameCounts(mirror.c, merged)){
+    healed = healed ? 'оба' : 'запасное';
+    putCountries(STATS.mirror, merged, mirror.etag).catch(() => {});
+  }
+  if (healed) console.info('Статистика восстановлена (' + healed + ')');
+
+  saveSnap(merged);
+  return { c: merged, etag: main.etag, healed };
+}
+
+/* Прибавляет человека к его стране. При одновременной записи двоих сервер
+   вернёт 412 — перечитываем свежие данные и прибавляем снова, голос не теряется.
+   Запись идёт и в основное, и в запасное хранилище. */
 async function countMeIn(code){
   for (let attempt = 0; attempt < 4; attempt++){
     const { c, etag } = await loadCountries();
     const had = code in c;
     if (had) c[code].n++;
     else c[code] = { n: 1, t: Date.now() };
-    const res = await fetch(STATS.blob, {
-      method: 'PUT',
-      headers: Object.assign({ 'Content-Type': 'application/json' },
-                             etag ? { 'If-Match': etag } : {}),
-      body: JSON.stringify({ v: 2, c })
-    });
-    if (res.ok) return { c, isNew: !had };
+    const res = await putCountries(STATS.blob, c, etag);
+    if (res.ok){
+      putCountries(STATS.mirror, c, null).catch(() => {});
+      saveSnap(c);
+      return { c, isNew: !had };
+    }
     if (res.status !== 412) break;
   }
   return null;
@@ -3872,7 +4419,7 @@ function giveMorph(open){
 
 function openGive(){
   if (giveOpen || panelOpen) return;
-  closePromise(); closeLesson();
+  closePromise(); closeLesson(); closeCourse(); closeTask();
   giveOpen = true;
   givePanel.classList.add('visible');
   scrim.classList.add('on');
@@ -3942,7 +4489,7 @@ function promiseMorph(open){
 }
 
 function openPromise(){
-  if (promiseOpen || panelOpen || lessonOpen) return;
+  if (promiseOpen || panelOpen || lessonOpen || courseOpen || taskOpen) return;
   promiseOpen = true; promiseAnimating = true;
   promisePanel.classList.add('visible');
   scrim.classList.add('on');
@@ -4075,14 +4622,16 @@ function closePanel(){
   };
 }
 
-fab.addEventListener('click', () => { closePromise(); closeGive(); closeLesson(); openPanel(); });
-scrim.addEventListener('click', () => { closePanel(); closePromise(); closeGive(); closeLesson(); });
+fab.addEventListener('click', () => { closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask(); openPanel(); });
+scrim.addEventListener('click', () => { closePanel(); closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask(); });
 window.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   closePanel();
   closePromise();
   closeGive();
   closeLesson();
+  closeCourse();
+  closeTask();
 });
 
 saveBtn.addEventListener('click', () => {
