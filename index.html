@@ -908,26 +908,33 @@
   #giveBtn{
     position:fixed;top:30px;right:32px;z-index:7;
     appearance:none;cursor:pointer;
-    padding:9px 18px;border-radius:999px;
+    padding:10px 19px;border-radius:999px;
     font-family:var(--font);font-size:11px;font-weight:500;
     letter-spacing:.22em;text-transform:uppercase;
-    color:rgba(247,242,228,.92);
-    background:rgba(40,32,20,.35);
-    border:1px solid rgba(230,207,154,.34);
-    backdrop-filter:blur(20px) saturate(1.9);
-    -webkit-backdrop-filter:blur(20px) saturate(1.9);
-    box-shadow:0 8px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.3);
+    color:rgba(252,246,232,.95);
+    background:linear-gradient(150deg,rgba(255,255,255,.16),rgba(255,255,255,.05) 42%,rgba(40,32,20,.32));
+    border:1px solid rgba(255,255,255,.26);
+    backdrop-filter:blur(26px) saturate(2.1);
+    -webkit-backdrop-filter:blur(26px) saturate(2.1);
+    /* толща стекла: свет по верхней кромке, тень по нижней, боковое преломление */
+    box-shadow:0 10px 34px rgba(0,0,0,.5),
+               inset 0 1.4px 0 rgba(255,255,255,.6),
+               inset 0 -1.2px 0 rgba(0,0,0,.3),
+               inset 10px 0 22px rgba(255,255,255,.07),
+               inset -10px 0 22px rgba(0,0,0,.18);
     overflow:hidden;
-    transition:transform .4s cubic-bezier(.22,.9,.24,1),border-color .4s;
+    transition:transform .45s cubic-bezier(.22,.9,.24,1),
+               box-shadow .45s,border-color .45s;
   }
   #giveBtn span{position:relative;z-index:2;display:flex;align-items:center;gap:7px}
-  #giveBtn svg{width:13px;height:13px;flex:none;opacity:.9;margin-top:-1px}
+  #giveBtn svg{width:15px;height:15px;flex:none;opacity:.95;margin-top:-1px}
   #giveBtn::before{            /* тёплая жидкость внутри кнопки */
-    content:'';position:absolute;inset:-60%;z-index:0;
+    content:'';position:absolute;inset:-70%;z-index:0;
     background:
-      radial-gradient(circle at 30% 40%,rgba(230,207,154,.55),transparent 55%),
-      radial-gradient(circle at 70% 60%,rgba(232,169,160,.42),transparent 55%);
-    filter:blur(12px);
+      radial-gradient(circle at 28% 38%,rgba(255,222,158,.62),transparent 54%),
+      radial-gradient(circle at 72% 62%,rgba(246,176,150,.5),transparent 54%),
+      radial-gradient(circle at 52% 84%,rgba(214,186,255,.3),transparent 56%);
+    filter:blur(13px);
     animation:giveFlow 11s ease-in-out infinite;
   }
   #giveBtn::after{             /* блик, пробегающий по кнопке */
@@ -936,8 +943,16 @@
     transform:translateX(-120%);
     animation:giveSheen 7s ease-in-out infinite;
   }
-  #giveBtn:hover{transform:scale(1.05);border-color:rgba(230,207,154,.8)}
-  #giveBtn:active{transform:scale(.97)}
+  #giveBtn:hover{
+    transform:scale(1.055);
+    border-color:rgba(255,232,190,.75);
+    box-shadow:0 14px 44px rgba(0,0,0,.55),
+               inset 0 1.6px 0 rgba(255,255,255,.8),
+               inset 0 -1.2px 0 rgba(0,0,0,.3),
+               inset 12px 0 26px rgba(255,255,255,.11),
+               inset -12px 0 26px rgba(0,0,0,.2);
+  }
+  #giveBtn:active{transform:scale(.965)}
   @keyframes giveFlow{
     0%,100%{transform:translate(-6%,-4%) scale(1)}
     50%{transform:translate(10%,8%) scale(1.25)}
@@ -1025,6 +1040,43 @@
   .give-sub{
     margin-top:6px;font-size:10.5px;font-weight:300;
     letter-spacing:.2em;text-transform:uppercase;color:rgba(245,244,240,.4);
+  }
+
+  /* цель сбора */
+  .goal{
+    margin-top:16px;padding:14px 15px 13px;border-radius:16px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.11);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.2),
+               inset 0 -12px 22px rgba(0,0,0,.14);
+  }
+  .goal-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .goal-name{
+    font-size:10px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;
+    color:rgba(245,244,240,.5);
+  }
+  .goal-num{
+    flex:none;font-size:10.5px;font-weight:300;letter-spacing:.04em;
+    color:rgba(245,244,240,.42);
+  }
+  .goal-num b{font-weight:600;font-size:13px;color:var(--gold);letter-spacing:.01em}
+  .goal-bar{
+    position:relative;margin-top:11px;height:6px;border-radius:99px;overflow:hidden;
+    background:rgba(255,255,255,.08);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+  }
+  .goal-bar i{
+    position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;
+    background:linear-gradient(90deg,rgba(230,207,154,.85),rgba(255,226,170,1));
+    box-shadow:0 0 14px rgba(255,214,150,.5);
+    transition:width 1.4s cubic-bezier(.22,.9,.24,1);
+  }
+  /* блик бежит по заполненной части — сбор виден как живой */
+  .goal-bar i::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);
+    background-size:260% 100%;
+    animation:cardWave 4.5s ease-in-out infinite;
   }
 
   /* переключатели с «живой» каплей-подложкой */
@@ -1528,8 +1580,10 @@
 <button id="giveBtn" aria-label="Поддержать" title="Поддержать"><span>
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M12 11.6 8.6 8.1a2.3 2.3 0 0 1 3.2-3.3l.2.2.2-.2a2.3 2.3 0 0 1 3.2 3.3z"/>
-    <path d="M6.4 14c0 3.4 2.7 5.6 5.6 5.6s5.6-2.2 5.6-5.6"/>
+    <path d="M12 9.9 9.6 7.4a1.75 1.75 0 0 1 2.4-2.5l.1.1.1-.1a1.75 1.75 0 0 1 2.4 2.5z"/>
+    <path d="M4.6 13.1c0-.8.7-1.4 1.5-1.2l2.6.7v-1.9"/>
+    <path d="M8.7 16.4h4.6c.9 0 1.6-.7 1.6-1.5s-.7-1.4-1.6-1.4h-2.6"/>
+    <path d="M15.1 13.6l3.1-1.1c.8-.3 1.6.2 1.7 1 .1.7-.3 1.3-.9 1.6l-4.4 2.2c-.6.3-1.2.5-1.9.5H8.7c-.7 0-1.4-.3-1.9-.8l-2.2-2.1"/>
   </svg>Дать</span></button>
 
 <div class="panel-wrap" id="giveWrap">
@@ -1540,6 +1594,14 @@
     <div class="give-in">
       <h2>Дать</h2>
       <div class="give-sub">от сердца · для служения</div>
+
+      <div class="goal" id="giveGoal">
+        <div class="goal-top">
+          <span class="goal-name" id="goalName"></span>
+          <span class="goal-num"><b id="goalNow"></b> из <span id="goalAll"></span></span>
+        </div>
+        <div class="goal-bar"><i id="goalFill"></i></div>
+      </div>
 
       <div class="seg" id="giveKind">
         <span class="seg-fill"></span>
@@ -3621,7 +3683,11 @@ const STATS = {
 /* Считаем только живых гостей на боевом домене. Локальная отладка и
    открытие файла с диска ничего не пишут — иначе в статистику попадают
    страны разработчика и цифры перестают быть честными. */
-const REAL_VISIT = location.protocol.startsWith('http') &&
+const DEV_MODE = /[?&]dev=1/.test(location.search) ||
+                 localStorage.getItem('aura_dev') === '1';
+if (/[?&]dev=1/.test(location.search)) localStorage.setItem('aura_dev', '1');
+
+const REAL_VISIT = location.protocol.startsWith('http') && !DEV_MODE &&
                    !/^(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1)/
                      .test(location.hostname);
 
@@ -3675,7 +3741,7 @@ function normCountries(raw){
    слепок в памяти браузера. При каждом запуске все три сверяются и сводятся
    по наибольшему значению — если какое-то обнулилось или отстало, оно
    молча чинится из остальных. Счётчики только растут, вниз не идут. */
-const LS_SNAP = 'aura_stats_v2';
+const LS_SNAP = 'aura_stats_v3';
 
 function mergeCountries(...srcs){
   const out = {};
@@ -3696,69 +3762,81 @@ function mergeCountries(...srcs){
 }
 
 const readSnap = () => {
-  try { return normCountries(JSON.parse(localStorage.getItem(LS_SNAP) || '{}')); }
-  catch { return {}; }
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS_SNAP) || 'null');
+    if (!raw) return null;
+    return { gen: +raw.gen || 1, c: normCountries(raw.c) };
+  } catch { return null; }
 };
-const saveSnap = c => { try { localStorage.setItem(LS_SNAP, JSON.stringify(c)); } catch {} };
+const saveSnap = (gen, c) => {
+  try { localStorage.setItem(LS_SNAP, JSON.stringify({ gen, c })); } catch {}
+};
 
 function sameCounts(a, b){
   const ka = Object.keys(a), kb = Object.keys(b);
   return ka.length === kb.length && ka.every(k => b[k] && b[k].n === a[k].n);
 }
 
-function putCountries(url, c, etag){
+function putCountries(url, gen, c, etag){
   return fetch(url, {
     method: 'PUT',
     headers: Object.assign({ 'Content-Type': 'application/json' },
                            etag ? { 'If-Match': etag } : {}),
-    body: JSON.stringify({ v: 2, c })
+    body: JSON.stringify({ v: 2, gen, c })
   });
 }
 
 async function readOne(url){
   try {
     const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return { c: null, etag: null };
+    if (!res.ok) return { c: null, gen: 0, etag: null };
     const etag = res.headers.get('ETag');
-    const data = await res.json();
-    return { c: normCountries(data && data.c), etag };
-  } catch { return { c: null, etag: null }; }
+    const d = await res.json();
+    return { c: normCountries(d && d.c), gen: (d && +d.gen) || 1, etag };
+  } catch { return { c: null, gen: 0, etag: null }; }
 }
 
+/* Три источника сводятся по наибольшему счёту, но только внутри одного
+   поколения. Если данные почищены вручную, поколение поднимается —
+   и старые слепки в браузерах уже не могут вернуть прежние числа. */
 async function loadCountries(){
   const [main, mirror] = await Promise.all([readOne(STATS.blob), readOne(STATS.mirror)]);
   const snap = readSnap();
-  const merged = mergeCountries(main.c, mirror.c, snap);
 
-  // чиним то, что отстало или обнулилось
+  const gen = Math.max(main.gen || 0, mirror.gen || 0) || 1;
+  const parts = [];
+  if (main.c && main.gen === gen) parts.push(main.c);
+  if (mirror.c && mirror.gen === gen) parts.push(mirror.c);
+  if (snap && snap.gen === gen) parts.push(snap.c);
+  const merged = mergeCountries(...parts);
+
   let healed = null;
-  if (main.c && !sameCounts(main.c, merged)){
+  if (main.c && (main.gen !== gen || !sameCounts(main.c, merged))){
     healed = 'основное';
-    putCountries(STATS.blob, merged, main.etag).catch(() => {});
+    putCountries(STATS.blob, gen, merged, main.etag).catch(() => {});
   }
-  if (mirror.c && !sameCounts(mirror.c, merged)){
+  if (mirror.c && (mirror.gen !== gen || !sameCounts(mirror.c, merged))){
     healed = healed ? 'оба' : 'запасное';
-    putCountries(STATS.mirror, merged, mirror.etag).catch(() => {});
+    putCountries(STATS.mirror, gen, merged, mirror.etag).catch(() => {});
   }
   if (healed) console.info('Статистика восстановлена (' + healed + ')');
 
-  saveSnap(merged);
-  return { c: merged, etag: main.etag, healed };
+  saveSnap(gen, merged);
+  return { c: merged, gen, etag: main.etag, healed };
 }
 
-/* Прибавляет человека к его стране. При одновременной записи двоих сервер
-   вернёт 412 — перечитываем свежие данные и прибавляем снова, голос не теряется.
-   Запись идёт и в основное, и в запасное хранилище. */
+/* Один человек — один голос. При одновременной записи двоих сервер вернёт 412,
+   тогда перечитываем свежие данные и прибавляем снова: голос не теряется. */
 async function countMeIn(code){
   for (let attempt = 0; attempt < 4; attempt++){
-    const { c, etag } = await loadCountries();
+    const { c, gen, etag } = await loadCountries();
     const had = code in c;
     if (had) c[code].n++;
     else c[code] = { n: 1, t: Date.now() };
-    const res = await putCountries(STATS.blob, c, etag);
+    const res = await putCountries(STATS.blob, gen, c, etag);
     if (res.ok){
-      putCountries(STATS.mirror, c, null).catch(() => {});
-      saveSnap(c);
+      putCountries(STATS.mirror, gen, c, null).catch(() => {});
+      saveSnap(gen, c);
       return { c, isNew: !had };
     }
     if (res.status !== 412) break;
@@ -4129,8 +4207,12 @@ async function initStats(){
 
   let { c } = await loadCountries().catch(() => ({ c: {} }));
   let mine = false;
-  // каждого человека прибавляем к его стране ровно один раз
-  if (REAL_VISIT && cc && !localStorage.getItem('aura_country_counted')){
+  /* Один человек — один голос: браузер помнит, что уже отмечен.
+     Но если его страны на сервере нет (данные терялись), голос возвращаем —
+     иначе человек навсегда выпадает из статистики. */
+  const counted = localStorage.getItem('aura_country_counted');
+  const lost = counted && !(counted in c);
+  if (REAL_VISIT && cc && (!counted || lost)){
     const res = await countMeIn(cc);
     if (res){ c = res.c; mine = res.isNew; localStorage.setItem('aura_country_counted', cc); }
   }
@@ -4262,6 +4344,13 @@ const giveNote   = document.getElementById('giveNote');
 const waysLabel  = document.getElementById('waysLabel');
 const segKind = document.getElementById('giveKind');
 const segFreq = document.getElementById('giveFreq');
+
+/* Цель служения: не деньги, а люди. Отметку правим здесь по мере роста. */
+const GOAL = {
+  name: 'познали Бога',
+  target: 10000,
+  raised: 1200
+};
 
 const giveCur = document.getElementById('giveCur');
 
@@ -4447,6 +4536,17 @@ function giveAmount(){
   return give.custom ? digits(customSum.value) : give.sum;
 }
 
+function renderGoal(){
+  document.getElementById('goalName').textContent = GOAL.name;
+  document.getElementById('goalNow').textContent = GOAL.raised.toLocaleString('ru-RU');
+  document.getElementById('goalAll').textContent =
+    GOAL.target.toLocaleString('ru-RU') + ' человек';
+  const part = GOAL.target > 0 ? Math.min(1, GOAL.raised / GOAL.target) : 0;
+  // тонкую полоску видно даже при нулевом сборе — цель читается сразу
+  document.getElementById('goalFill').style.width =
+    (part > 0 ? Math.max(3, part * 100) : 0) + '%';
+}
+
 function syncGive(){
   const tithe = give.kind === 'tithe';
 
@@ -4536,6 +4636,7 @@ function openGive(){
   givePanel.classList.add('visible');
   scrim.classList.add('on');
   syncGive();
+  renderGoal();
   setSeg(segKind, give.kind);
   setSeg(segFreq, give.freq);
   giveMorph(true);
