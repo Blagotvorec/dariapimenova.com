@@ -303,6 +303,244 @@
   }
   #toast.with-copy #toastCopy{display:block}
 
+  /* ---------- «Дать»: жидкость ---------- */
+  @property --rim{syntax:'<angle>';initial-value:0deg;inherits:false}
+
+  #giveBtn{
+    position:fixed;top:30px;right:32px;z-index:7;
+    appearance:none;cursor:pointer;
+    padding:9px 18px;border-radius:999px;
+    font-family:var(--font);font-size:11px;font-weight:500;
+    letter-spacing:.22em;text-transform:uppercase;
+    color:rgba(247,242,228,.92);
+    background:rgba(40,32,20,.35);
+    border:1px solid rgba(230,207,154,.34);
+    backdrop-filter:blur(20px) saturate(1.9);
+    -webkit-backdrop-filter:blur(20px) saturate(1.9);
+    box-shadow:0 8px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.3);
+    overflow:hidden;
+    transition:transform .4s cubic-bezier(.22,.9,.24,1),border-color .4s;
+  }
+  #giveBtn span{position:relative;z-index:2;display:flex;align-items:center;gap:7px}
+  #giveBtn svg{width:13px;height:13px;flex:none;opacity:.9;margin-top:-1px}
+  #giveBtn::before{            /* тёплая жидкость внутри кнопки */
+    content:'';position:absolute;inset:-60%;z-index:0;
+    background:
+      radial-gradient(circle at 30% 40%,rgba(230,207,154,.55),transparent 55%),
+      radial-gradient(circle at 70% 60%,rgba(232,169,160,.42),transparent 55%);
+    filter:blur(12px);
+    animation:giveFlow 11s ease-in-out infinite;
+  }
+  #giveBtn::after{             /* блик, пробегающий по кнопке */
+    content:'';position:absolute;inset:0;z-index:1;
+    background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.34) 50%,transparent 60%);
+    transform:translateX(-120%);
+    animation:giveSheen 7s ease-in-out infinite;
+  }
+  #giveBtn:hover{transform:scale(1.05);border-color:rgba(230,207,154,.8)}
+  #giveBtn:active{transform:scale(.97)}
+  @keyframes giveFlow{
+    0%,100%{transform:translate(-6%,-4%) scale(1)}
+    50%{transform:translate(10%,8%) scale(1.25)}
+  }
+  @keyframes giveSheen{
+    0%,72%{transform:translateX(-120%)}
+    100%{transform:translateX(120%)}
+  }
+
+  #givePanel{
+    pointer-events:auto;
+    position:relative;overflow:hidden;
+    width:min(460px,100%);
+    border-radius:34px;
+    background:rgba(16,14,18,.52);
+    border:1px solid rgba(255,255,255,.14);
+    backdrop-filter:blur(44px) saturate(2.1);
+    -webkit-backdrop-filter:blur(44px) saturate(2.1);
+    box-shadow:0 44px 120px rgba(0,0,0,.82),
+               inset 0 1px 0 rgba(255,255,255,.34),
+               inset 0 -40px 80px rgba(255,255,255,.035);
+    padding:32px 30px 26px;
+    display:none;will-change:transform;
+  }
+  #givePanel.visible{display:block}
+
+  /* обод из света, текущий по контуру */
+  #givePanel::after{
+    content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
+    background:conic-gradient(from var(--rim),
+      rgba(255,255,255,.55),rgba(230,207,154,.5),rgba(232,169,160,.3),
+      rgba(154,230,216,.28),rgba(255,255,255,.06),rgba(255,255,255,.55));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    mask-composite:exclude;
+    animation:rimFlow 14s linear infinite;
+    pointer-events:none;z-index:3;
+  }
+  @keyframes rimFlow{to{--rim:360deg}}
+
+  /* сама жидкость: капли перетекают друг сквозь друга */
+  .liquid{position:absolute;inset:-25%;z-index:0;pointer-events:none;
+    filter:blur(44px) saturate(1.6);opacity:.9}
+  .liquid i{position:absolute;display:block;border-radius:50%;mix-blend-mode:screen}
+  .liquid .d1{width:56%;height:46%;left:2%;top:4%;
+    background:radial-gradient(circle,rgba(230,207,154,.85),transparent 68%);
+    animation:drift1 19s ease-in-out infinite}
+  .liquid .d2{width:50%;height:44%;left:40%;top:20%;
+    background:radial-gradient(circle,rgba(232,169,160,.7),transparent 68%);
+    animation:drift2 25s ease-in-out infinite}
+  .liquid .d3{width:46%;height:42%;left:16%;top:44%;
+    background:radial-gradient(circle,rgba(154,206,230,.5),transparent 68%);
+    animation:drift3 31s ease-in-out infinite}
+  .liquid .d4{width:38%;height:36%;left:56%;top:56%;
+    background:radial-gradient(circle,rgba(186,160,230,.45),transparent 68%);
+    animation:drift1 27s ease-in-out infinite reverse}
+  @keyframes drift1{
+    0%,100%{transform:translate(0,0) scale(1)}
+    33%{transform:translate(34%,18%) scale(1.24)}
+    66%{transform:translate(12%,40%) scale(.88)}}
+  @keyframes drift2{
+    0%,100%{transform:translate(0,0) scale(1.05)}
+    40%{transform:translate(-30%,26%) scale(.85)}
+    70%{transform:translate(-14%,-18%) scale(1.2)}}
+  @keyframes drift3{
+    0%,100%{transform:translate(0,0) scale(.95)}
+    45%{transform:translate(28%,-24%) scale(1.18)}
+    75%{transform:translate(40%,14%) scale(1)}}
+
+  /* широкий блик, медленно идущий по поверхности */
+  .liquid-sheen{
+    position:absolute;inset:0;z-index:1;pointer-events:none;border-radius:inherit;
+    background:linear-gradient(118deg,transparent 38%,rgba(255,255,255,.13) 48%,
+               rgba(255,255,255,.05) 54%,transparent 64%);
+    background-size:280% 100%;
+    animation:sheenMove 12s ease-in-out infinite;
+  }
+  @keyframes sheenMove{0%,100%{background-position:120% 0}50%{background-position:-40% 0}}
+
+  .give-in{position:relative;z-index:4}
+  #givePanel h2{
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:24px;font-weight:500;letter-spacing:.04em;color:#fbf6ea;
+  }
+  .give-sub{
+    margin-top:6px;font-size:10.5px;font-weight:300;
+    letter-spacing:.2em;text-transform:uppercase;color:rgba(245,244,240,.4);
+  }
+
+  /* переключатели с «живой» каплей-подложкой */
+  .seg{
+    position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;
+    margin-top:18px;padding:4px;border-radius:16px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.1);
+  }
+  .seg-fill{
+    position:absolute;top:4px;bottom:4px;left:4px;z-index:0;
+    border-radius:12px;
+    background:linear-gradient(135deg,rgba(230,207,154,.95),rgba(232,186,152,.8));
+    box-shadow:0 6px 18px rgba(230,207,154,.24),inset 0 1px 0 rgba(255,255,255,.5);
+    transition:transform .5s cubic-bezier(.34,1.4,.4,1),width .5s cubic-bezier(.34,1.4,.4,1);
+  }
+  /* сжатие идёт отдельным свойством scale, чтобы не спорить со сдвигом */
+  .seg-fill.squish{animation:segSquish .5s cubic-bezier(.34,1.4,.4,1)}
+  @keyframes segSquish{
+    0%{scale:1 1}
+    40%{scale:1.09 .8}
+    100%{scale:1 1}}
+  .seg button{
+    position:relative;z-index:1;appearance:none;background:none;border:0;cursor:pointer;
+    padding:11px 6px;border-radius:12px;
+    font-family:var(--font);font-size:11px;font-weight:500;
+    letter-spacing:.1em;text-transform:uppercase;
+    color:rgba(245,244,240,.5);
+    transition:color .35s;
+  }
+  .seg button.on{color:#1c1608;font-weight:600}
+  .seg button:disabled{opacity:.3;cursor:default}
+
+  .give-label{
+    margin-top:20px;font-size:10px;font-weight:300;
+    letter-spacing:.2em;text-transform:uppercase;color:rgba(245,244,240,.34);
+  }
+  .sums{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .sums button{
+    appearance:none;cursor:pointer;padding:12px 4px;border-radius:14px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.12);
+    color:rgba(245,244,240,.8);
+    font-family:var(--font);font-size:12.5px;font-weight:400;letter-spacing:.02em;
+    transition:transform .3s cubic-bezier(.34,1.4,.4,1),background .3s,color .3s,border-color .3s;
+  }
+  .sums button:hover{background:rgba(255,255,255,.1)}
+  .sums button.on{
+    background:linear-gradient(135deg,rgba(230,207,154,.95),rgba(232,186,152,.8));
+    color:#1c1608;font-weight:600;border-color:transparent;
+    box-shadow:0 8px 22px rgba(230,207,154,.22),inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  .sums button:active{transform:scale(.94)}
+
+  .give-field{
+    display:none;margin-top:10px;position:relative;
+  }
+  .give-field.on{display:block}
+  .give-field input{
+    width:100%;appearance:none;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:14px;padding:14px 46px 14px 16px;
+    font-family:var(--font);font-size:15px;font-weight:400;
+    color:var(--ink);caret-color:var(--gold);outline:none;
+    transition:border-color .3s,background .3s;
+  }
+  .give-field input:focus{border-color:rgba(230,207,154,.55);background:rgba(255,255,255,.08)}
+  .give-field b{
+    position:absolute;right:16px;top:50%;transform:translateY(-50%);
+    font-weight:400;font-size:14px;color:rgba(245,244,240,.4);pointer-events:none;
+  }
+  .tithe-out{
+    margin-top:10px;font-size:12.5px;font-weight:300;letter-spacing:.03em;
+    color:rgba(230,207,154,.85);
+  }
+  .tithe-out b{font-weight:600;color:var(--gold)}
+
+  .ways{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .way{
+    position:relative;overflow:hidden;
+    appearance:none;cursor:pointer;text-align:left;
+    display:flex;align-items:center;gap:13px;
+    padding:14px 16px;border-radius:16px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.12);
+    color:var(--ink);
+    transition:transform .3s cubic-bezier(.34,1.4,.4,1),background .3s,border-color .3s;
+  }
+  .way:hover{background:rgba(255,255,255,.1);border-color:rgba(230,207,154,.4)}
+  .way:active{transform:scale(.985)}
+  .way .ico{
+    flex:none;width:34px;height:34px;border-radius:11px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(140deg,rgba(255,255,255,.16),rgba(255,255,255,.04));
+    border:1px solid rgba(255,255,255,.14);
+    color:rgba(247,242,228,.9);
+  }
+  .way .ico svg{width:16px;height:16px}
+  .way .tx{flex:1;min-width:0}
+  .way .tx i{
+    display:block;font-style:normal;font-size:13.5px;font-weight:400;letter-spacing:.01em;
+  }
+  .way .tx u{
+    display:block;text-decoration:none;margin-top:2px;
+    font-size:10.5px;font-weight:300;letter-spacing:.06em;
+    color:rgba(245,244,240,.38);
+  }
+  .way .go{flex:none;color:rgba(245,244,240,.3);font-size:16px;line-height:1}
+
+  .give-note{
+    margin-top:16px;font-size:10.5px;font-weight:300;line-height:1.6;
+    letter-spacing:.04em;color:rgba(245,244,240,.32);text-align:center;
+  }
+
   /* ---------- panel ---------- */
   .scrim{
     position:fixed;inset:0;z-index:7;
@@ -500,6 +738,10 @@
     .toggle button{font-size:10.5px;padding:8px 16px;letter-spacing:.12em}
     #fab{width:40px;height:40px;right:14px;bottom:72px}
     #shareBtn{width:36px;height:36px;right:16px;bottom:122px}
+    #giveBtn{top:16px;right:14px;padding:8px 15px;font-size:10px;letter-spacing:.18em}
+    #givePanel{padding:26px 22px 22px;border-radius:30px}
+    #givePanel h2{font-size:21px}
+    .sums button{padding:11px 2px;font-size:11.5px}
     #toast{bottom:170px;padding:11px 13px}
     #cloudHint{
       bottom:118px;font-size:9.5px;letter-spacing:.1em;
@@ -562,6 +804,56 @@
 </button>
 
 <div class="scrim" id="scrim"></div>
+
+<button id="giveBtn" aria-label="Поддержать" title="Поддержать"><span>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 11.6 8.6 8.1a2.3 2.3 0 0 1 3.2-3.3l.2.2.2-.2a2.3 2.3 0 0 1 3.2 3.3z"/>
+    <path d="M6.4 14c0 3.4 2.7 5.6 5.6 5.6s5.6-2.2 5.6-5.6"/>
+  </svg>Дать</span></button>
+
+<div class="panel-wrap" id="giveWrap">
+  <div id="givePanel">
+    <div class="liquid" aria-hidden="true"><i class="d1"></i><i class="d2"></i><i class="d3"></i><i class="d4"></i></div>
+    <div class="liquid-sheen" aria-hidden="true"></div>
+
+    <div class="give-in">
+      <h2>Дать</h2>
+      <div class="give-sub">от сердца · для служения</div>
+
+      <div class="seg" id="giveKind">
+        <span class="seg-fill"></span>
+        <button data-v="gift" class="on">Пожертвование</button>
+        <button data-v="tithe">Десятина</button>
+      </div>
+
+      <div class="seg" id="giveFreq">
+        <span class="seg-fill"></span>
+        <button data-v="once" class="on">Разово</button>
+        <button data-v="month">Ежемесячно</button>
+      </div>
+
+      <div class="give-label" id="sumLabel">Сумма</div>
+      <div class="sums" id="giveSums"></div>
+
+      <div class="give-field" id="customWrap">
+        <input id="customSum" type="text" inputmode="numeric" placeholder="Своя сумма">
+        <b>₽</b>
+      </div>
+
+      <div class="give-field" id="incomeWrap">
+        <input id="incomeSum" type="text" inputmode="numeric" placeholder="Ваш доход за месяц">
+        <b>₽</b>
+      </div>
+      <div class="tithe-out" id="titheOut"></div>
+
+      <div class="give-label" id="waysLabel">Как удобно отправить</div>
+      <div class="ways" id="giveWays"></div>
+
+      <div class="give-note" id="giveNote"></div>
+    </div>
+  </div>
+</div>
 
 <div class="panel-wrap" id="promiseWrap">
   <div id="promisePanel">
@@ -2332,6 +2624,237 @@ async function applySharedState(str){
   }
 }
 
+/* ============================== «Дать» ============================== */
+
+/* Куда ведут кнопки способов. Пока пусто — счета не подключены;
+   как появятся ссылки Stripe/PayPal/СБП, они кладутся сюда, и окно
+   начинает работать без единой правки в остальном коде.
+   links: { card: { once: 'https://…', month: 'https://…' }, … }
+   endpoint — свой обработчик, если нужен произвольный размер суммы. */
+const GIVE = {
+  currency: '₽',
+  presets: [500, 1000, 3000, 5000],
+  ways: [
+    { id: 'card',   title: 'Банковской картой', note: 'Visa · Mastercard · Apple Pay' },
+    { id: 'paypal', title: 'PayPal',            note: 'счёт PayPal или карта' },
+    { id: 'ru',     title: 'Карта РФ · СБП',    note: 'перевод внутри России' }
+  ],
+  links: {},
+  endpoint: ''
+};
+
+const WAY_ICONS = {
+  card:  '<path d="M2 7.5h20M2 6a2 2 0 012-2h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2z"/><path d="M6 15.5h4"/>',
+  paypal:'<path d="M7 19l2.2-13h5.4c2.4 0 3.9 1.4 3.5 3.7-.4 2.5-2.3 3.9-5 3.9h-2.3L10 19z"/><path d="M6 21h2"/>',
+  ru:    '<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M9 7h6M9 11h6M9 15h3"/>'
+};
+
+const giveBtn   = document.getElementById('giveBtn');
+const givePanel = document.getElementById('givePanel');
+const giveSums  = document.getElementById('giveSums');
+const giveWays  = document.getElementById('giveWays');
+const customWrap = document.getElementById('customWrap');
+const customSum  = document.getElementById('customSum');
+const incomeWrap = document.getElementById('incomeWrap');
+const incomeSum  = document.getElementById('incomeSum');
+const titheOut   = document.getElementById('titheOut');
+const sumLabel   = document.getElementById('sumLabel');
+const giveNote   = document.getElementById('giveNote');
+const waysLabel  = document.getElementById('waysLabel');
+const segKind = document.getElementById('giveKind');
+const segFreq = document.getElementById('giveFreq');
+
+let giveOpen = false;
+let give = { kind: 'gift', freq: 'once', sum: GIVE.presets[1], custom: false };
+
+const fmtSum = n => n.toLocaleString('ru-RU');
+const digits = s => +String(s).replace(/[^\d]/g, '') || 0;
+
+/* --- сборка списков --- */
+GIVE.presets.forEach(v => {
+  const b = document.createElement('button');
+  b.textContent = fmtSum(v);
+  b.dataset.sum = v;
+  giveSums.appendChild(b);
+});
+{
+  const b = document.createElement('button');
+  b.textContent = 'Своя';
+  b.dataset.sum = 'custom';
+  giveSums.appendChild(b);
+  giveSums.style.gridTemplateColumns = 'repeat(' + Math.min(5, GIVE.presets.length + 1) + ',1fr)';
+}
+
+GIVE.ways.forEach(w => {
+  const b = document.createElement('button');
+  b.className = 'way';
+  b.dataset.way = w.id;
+  b.innerHTML =
+    '<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + WAY_ICONS[w.id] + '</svg></span>' +
+    '<span class="tx"><i></i><u></u></span><span class="go">→</span>';
+  b.querySelector('i').textContent = w.title;
+  b.querySelector('u').textContent = w.note;
+  giveWays.appendChild(b);
+});
+
+/* --- переключатели --- */
+function moveSeg(seg, btn){
+  const fill = seg.querySelector('.seg-fill');
+  const r = btn.getBoundingClientRect(), sr = seg.getBoundingClientRect();
+  if (!r.width) return;
+  fill.style.width = r.width + 'px';
+  fill.style.transform = 'translateX(' + (r.left - sr.left - 4) + 'px)';
+  fill.classList.remove('squish');
+  void fill.offsetWidth;
+  fill.classList.add('squish');
+}
+
+function setSeg(seg, value){
+  const btns = [...seg.querySelectorAll('button')];
+  const btn = btns.find(b => b.dataset.v === value) || btns[0];
+  btns.forEach(b => b.classList.toggle('on', b === btn));
+  moveSeg(seg, btn);
+}
+
+segKind.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  give.kind = b.dataset.v;
+  setSeg(segKind, give.kind);
+  if (give.kind === 'tithe'){ give.freq = 'month'; setSeg(segFreq, 'month'); }
+  syncGive();
+});
+
+segFreq.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  give.freq = b.dataset.v;
+  setSeg(segFreq, give.freq);
+  syncGive();
+});
+
+giveSums.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  give.custom = b.dataset.sum === 'custom';
+  if (!give.custom) give.sum = +b.dataset.sum;
+  syncGive();
+  if (give.custom) customSum.focus();
+});
+
+customSum.addEventListener('input', () => {
+  const v = digits(customSum.value);
+  customSum.value = v ? fmtSum(v) : '';
+  give.sum = v;
+  syncGive();
+});
+
+incomeSum.addEventListener('input', () => {
+  const v = digits(incomeSum.value);
+  incomeSum.value = v ? fmtSum(v) : '';
+  give.sum = Math.round(v / 10);
+  syncGive();
+});
+
+/* --- текущая сумма к отправке --- */
+function giveAmount(){
+  if (give.kind === 'tithe') return Math.round(digits(incomeSum.value) / 10);
+  return give.custom ? digits(customSum.value) : give.sum;
+}
+
+function syncGive(){
+  const tithe = give.kind === 'tithe';
+
+  // десятина — всегда ежемесячно
+  segFreq.querySelector('[data-v="once"]').disabled = tithe;
+  segFreq.style.opacity = tithe ? .55 : 1;
+
+  sumLabel.textContent = tithe ? 'Десятина от дохода' : 'Сумма';
+  giveSums.style.display   = tithe ? 'none' : 'grid';
+  incomeWrap.classList.toggle('on', tithe);
+  customWrap.classList.toggle('on', !tithe && give.custom);
+
+  giveSums.querySelectorAll('button').forEach(b =>
+    b.classList.toggle('on', give.custom ? b.dataset.sum === 'custom'
+                                         : +b.dataset.sum === give.sum));
+
+  const amount = giveAmount();
+  titheOut.style.display = tithe ? 'block' : 'none';
+  if (tithe)
+    titheOut.innerHTML = amount
+      ? 'Десятина: <b>' + fmtSum(amount) + ' ' + GIVE.currency + '</b> каждый месяц'
+      : 'Укажите доход — посчитаем десятую часть';
+
+  waysLabel.textContent = amount
+    ? 'Как удобно отправить ' + fmtSum(amount) + ' ' + GIVE.currency
+    : 'Как удобно отправить';
+  giveNote.textContent = give.freq === 'month'
+    ? 'Ежемесячный платёж можно отменить в любой момент.'
+    : 'Разовый платёж. Карты вне России — Stripe и PayPal, российские — СБП.';
+}
+
+/* --- запуск оплаты --- */
+giveWays.addEventListener('click', e => {
+  const b = e.target.closest('.way'); if (!b) return;
+  const amount = giveAmount();
+  if (!amount){
+    showToast(give.kind === 'tithe' ? 'Укажите доход за месяц' : 'Выберите сумму');
+    return;
+  }
+  const way = b.dataset.way;
+  const params = new URLSearchParams({
+    amount: String(amount), currency: 'RUB',
+    kind: give.kind, freq: give.freq, method: way
+  });
+
+  if (GIVE.endpoint){
+    location.href = GIVE.endpoint + (GIVE.endpoint.includes('?') ? '&' : '?') + params;
+    return;
+  }
+  const link = GIVE.links?.[way]?.[give.freq];
+  if (link){
+    window.open(link, '_blank', 'noopener');
+    closeGive();
+    return;
+  }
+  showToast('Этот способ ещё подключаем — совсем скоро');
+});
+
+/* --- открытие и закрытие --- */
+function giveMorph(open){
+  const pr = givePanel.getBoundingClientRect();
+  const br = giveBtn.getBoundingClientRect();
+  const dx = (br.left + br.width / 2) - (pr.left + pr.width / 2);
+  const dy = (br.top + br.height / 2) - (pr.top + pr.height / 2);
+  const s = Math.max(0.06, br.width / pr.width);
+  const small = { transform: `translate(${dx}px, ${dy}px) scale(${s})`,
+                  opacity: 0.15, borderRadius: '999px' };
+  const full  = { transform: 'translate(0, 0) scale(1)', opacity: 1, borderRadius: '34px' };
+  return givePanel.animate(open ? [small, full] : [full, small],
+    { duration: open ? 620 : 520, easing: EASE });
+}
+
+function openGive(){
+  if (giveOpen || panelOpen) return;
+  closePromise();
+  giveOpen = true;
+  givePanel.classList.add('visible');
+  scrim.classList.add('on');
+  syncGive();
+  setSeg(segKind, give.kind);
+  setSeg(segFreq, give.freq);
+  giveMorph(true);
+}
+
+function closeGive(){
+  if (!giveOpen) return;
+  giveOpen = false;
+  scrim.classList.remove('on');
+  giveMorph(false).onfinish = () => {
+    if (!giveOpen) givePanel.classList.remove('visible');
+  };
+}
+
+giveBtn.addEventListener('click', openGive);
+
 /* ============================== обещание на неделю ============================== */
 
 const promiseBtn    = document.getElementById('promiseBtn');
@@ -2511,12 +3034,13 @@ function closePanel(){
   };
 }
 
-fab.addEventListener('click', () => { closePromise(); openPanel(); });
-scrim.addEventListener('click', () => { closePanel(); closePromise(); });
+fab.addEventListener('click', () => { closePromise(); closeGive(); openPanel(); });
+scrim.addEventListener('click', () => { closePanel(); closePromise(); closeGive(); });
 window.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   closePanel();
   closePromise();
+  closeGive();
 });
 
 saveBtn.addEventListener('click', () => {
