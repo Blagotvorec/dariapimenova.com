@@ -45,6 +45,146 @@
   }
   .brand{pointer-events:none}
 
+  /* ---------- «Наполнить» ---------- */
+  #fillBtn{
+    pointer-events:auto;
+    display:inline-flex;align-items:center;gap:7px;
+    margin-top:11px;padding:8px 16px;border-radius:999px;
+    appearance:none;cursor:pointer;overflow:hidden;position:relative;
+    font-family:var(--font);font-size:10px;font-weight:500;
+    letter-spacing:.2em;text-transform:uppercase;
+    color:rgba(247,244,236,.9);
+    background:rgba(30,34,44,.4);
+    border:1px solid rgba(190,205,255,.28);
+    backdrop-filter:blur(20px) saturate(1.9);
+    -webkit-backdrop-filter:blur(20px) saturate(1.9);
+    box-shadow:0 8px 26px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.3);
+    transition:transform .45s cubic-bezier(.22,.9,.24,1),border-color .4s;
+  }
+  #fillBtn span{position:relative;z-index:2}
+  #fillBtn::before{
+    content:'';position:absolute;inset:-60%;z-index:0;
+    background:
+      radial-gradient(circle at 32% 42%,rgba(150,190,255,.5),transparent 55%),
+      radial-gradient(circle at 68% 58%,rgba(196,168,255,.42),transparent 55%);
+    filter:blur(12px);
+    animation:fillFlow 13s ease-in-out infinite;
+  }
+  #fillBtn::after{
+    content:'';position:absolute;inset:0;z-index:1;
+    background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.32) 50%,transparent 60%);
+    transform:translateX(-120%);
+    animation:giveSheen 8s ease-in-out infinite 1.5s;
+  }
+  #fillBtn:hover{transform:scale(1.05);border-color:rgba(190,205,255,.65)}
+  #fillBtn:active{transform:scale(.97)}
+  @keyframes fillFlow{
+    0%,100%{transform:translate(-5%,-4%) scale(1)}
+    50%{transform:translate(9%,7%) scale(1.28)}
+  }
+
+  #lessonPanel{
+    pointer-events:auto;
+    position:relative;overflow:hidden;
+    width:min(560px,100%);
+    border-radius:34px;
+    background:rgba(14,15,20,.5);
+    border:1px solid rgba(255,255,255,.13);
+    backdrop-filter:blur(46px) saturate(2.2);
+    -webkit-backdrop-filter:blur(46px) saturate(2.2);
+    box-shadow:0 46px 130px rgba(0,0,0,.85),
+               inset 0 1px 0 rgba(255,255,255,.34),
+               inset 0 -46px 90px rgba(255,255,255,.04);
+    padding:30px 28px 24px;
+    display:none;will-change:transform;
+  }
+  #lessonPanel.visible{display:block}
+  /* капля оседает: края успокаиваются не сразу */
+  #lessonPanel.settle{animation:dropSettle 1.25s cubic-bezier(.22,.9,.24,1)}
+  @keyframes dropSettle{
+    0%{border-radius:54% 46% 62% 38% / 44% 58% 42% 56%}
+    30%{border-radius:44% 56% 42% 58% / 58% 40% 60% 42%}
+    62%{border-radius:40px 30px 40px 30px}
+    100%{border-radius:34px}
+  }
+  /* обод из света течёт по контуру */
+  #lessonPanel::after{
+    content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
+    background:conic-gradient(from var(--rim),
+      rgba(255,255,255,.6),rgba(178,205,255,.5),rgba(206,176,255,.32),
+      rgba(154,230,216,.26),rgba(255,255,255,.05),rgba(255,255,255,.6));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    mask-composite:exclude;
+    animation:rimFlow 16s linear infinite;
+    pointer-events:none;z-index:4;
+  }
+  /* блик преломления по верхней кромке */
+  #lessonPanel::before{
+    content:'';position:absolute;left:8%;right:8%;top:0;height:52%;
+    background:radial-gradient(120% 100% at 50% 0,rgba(255,255,255,.2),rgba(255,255,255,0) 62%);
+    pointer-events:none;z-index:3;border-radius:inherit;
+  }
+  .liq{position:absolute;inset:-28%;z-index:0;pointer-events:none;
+    filter:blur(46px) saturate(1.7);opacity:.85}
+  .liq i{position:absolute;display:block;border-radius:50%;mix-blend-mode:screen}
+  .liq .q1{width:54%;height:46%;left:0%;top:2%;
+    background:radial-gradient(circle,rgba(122,166,255,.75),transparent 68%);
+    animation:drift1 21s ease-in-out infinite}
+  .liq .q2{width:50%;height:44%;left:44%;top:16%;
+    background:radial-gradient(circle,rgba(196,160,255,.62),transparent 68%);
+    animation:drift2 27s ease-in-out infinite}
+  .liq .q3{width:46%;height:42%;left:12%;top:46%;
+    background:radial-gradient(circle,rgba(120,220,214,.5),transparent 68%);
+    animation:drift3 33s ease-in-out infinite}
+  .liq .q4{width:40%;height:38%;left:56%;top:54%;
+    background:radial-gradient(circle,rgba(230,207,154,.42),transparent 68%);
+    animation:drift1 29s ease-in-out infinite reverse}
+
+  /* переключатель подхватывает холодную палитру этого окна */
+  #lessonSrc .seg-fill{
+    background:linear-gradient(135deg,rgba(206,220,255,.95),rgba(226,214,255,.85));
+    box-shadow:0 6px 18px rgba(150,170,255,.24),inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  #lessonSrc button.on{color:#181c2a}
+
+  .lesson-in{position:relative;z-index:5}
+  #lessonPanel h2{
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:23px;font-weight:500;letter-spacing:.04em;color:#fbf8f0;
+  }
+  .lesson-sub{
+    margin-top:6px;font-size:10px;font-weight:300;
+    letter-spacing:.2em;text-transform:uppercase;color:rgba(245,244,240,.38);
+  }
+  .player{
+    position:relative;margin-top:16px;
+    aspect-ratio:16/9;width:100%;
+    border-radius:18px;overflow:hidden;
+    background:#000;
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 18px 50px rgba(0,0,0,.5);
+  }
+  .player iframe{width:100%;height:100%;border:0;display:block}
+  .player .wait{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:10.5px;font-weight:300;letter-spacing:.18em;text-transform:uppercase;
+    color:rgba(245,244,240,.3);
+  }
+  #lessonGet{
+    margin-top:18px;width:100%;
+    appearance:none;border:0;cursor:pointer;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#c9d6ff,#e7d9ff 55%,#f6e9c8);
+    color:#151824;
+    font-family:var(--font);font-size:12.5px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;
+    padding:17px;border-radius:16px;
+    box-shadow:0 14px 40px rgba(150,170,255,.2),inset 0 1px 0 rgba(255,255,255,.7);
+    transition:transform .3s cubic-bezier(.34,1.4,.4,1),box-shadow .3s;
+  }
+  #lessonGet:hover{box-shadow:0 18px 50px rgba(150,170,255,.34)}
+  #lessonGet:active{transform:scale(.985)}
+
   /* ---------- статистика ---------- */
   .stats{
     display:none;align-items:center;gap:7px;margin-top:9px;
@@ -893,7 +1033,28 @@
     </svg>
   </button></span>
   <em>содержание духа из ваших слов</em>
+  <button id="fillBtn" aria-label="Наполнить"><span>Наполнить</span></button>
   <div class="stats" id="stats"><span class="flags" id="statFlags"></span><span id="statText"></span></div>
+</div>
+
+<div class="panel-wrap" id="lessonWrap">
+  <div id="lessonPanel">
+    <div class="liq" aria-hidden="true"><i class="q1"></i><i class="q2"></i><i class="q3"></i><i class="q4"></i></div>
+    <div class="lesson-in">
+      <h2>Тайна Библии</h2>
+      <div class="lesson-sub">первый урок · запись вебинара</div>
+
+      <div class="seg" id="lessonSrc">
+        <span class="seg-fill"></span>
+        <button data-v="yt" class="on">YouTube</button>
+        <button data-v="rt">RuTube</button>
+      </div>
+
+      <div class="player" id="lessonPlayer"><div class="wait">плеер загружается…</div></div>
+
+      <button id="lessonGet">Получить доступ</button>
+    </div>
+  </div>
 </div>
 
 <div id="flagFx" aria-hidden="true">
@@ -2761,6 +2922,94 @@ async function applySharedState(str){
   }
 }
 
+/* ============================== «Наполнить»: первый урок ============================== */
+
+const LESSON = {
+  yt: 'https://www.youtube-nocookie.com/embed/y172cEmiFig?rel=0&modestbranding=1',
+  // приватное видео RuTube: в присланной ссылке два «?» подряд, токен p —
+  // это 9cOyCOZ7dRxIYCqoWPLTSQ, а r=plemwd лишь метка перехода
+  rt: 'https://rutube.ru/play/embed/4f4bf674bcfa904688ccba6cd7bd5eac/?p=9cOyCOZ7dRxIYCqoWPLTSQ',
+  // куда ведёт «Получить доступ» — уточнить у Антона
+  get: 'https://t.me/genius_meridian'
+};
+
+const fillBtn      = document.getElementById('fillBtn');
+const lessonPanel  = document.getElementById('lessonPanel');
+const lessonPlayer = document.getElementById('lessonPlayer');
+const lessonSrc    = document.getElementById('lessonSrc');
+const lessonGet    = document.getElementById('lessonGet');
+
+let lessonOpen = false, lessonWhich = 'yt', lessonLoaded = false;
+
+function mountPlayer(which){
+  lessonWhich = which;
+  lessonPlayer.innerHTML = '';
+  const f = document.createElement('iframe');
+  f.src = LESSON[which];
+  f.allow = 'accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+  f.allowFullscreen = true;
+  f.referrerPolicy = 'strict-origin-when-cross-origin';
+  f.loading = 'lazy';
+  lessonPlayer.appendChild(f);
+  lessonLoaded = true;
+}
+
+function unmountPlayer(){
+  lessonPlayer.innerHTML = '<div class="wait">плеер загружается…</div>';
+  lessonLoaded = false;
+}
+
+lessonSrc.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  setSeg(lessonSrc, b.dataset.v);
+  if (b.dataset.v !== lessonWhich) mountPlayer(b.dataset.v);
+});
+
+lessonGet.addEventListener('click', () => {
+  window.open(LESSON.get, '_blank', 'noopener');
+});
+
+function lessonMorph(open){
+  const pr = lessonPanel.getBoundingClientRect();
+  const br = fillBtn.getBoundingClientRect();
+  const dx = (br.left + br.width / 2) - (pr.left + pr.width / 2);
+  const dy = (br.top + br.height / 2) - (pr.top + pr.height / 2);
+  const s = Math.max(0.06, br.width / pr.width);
+  const small = { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 0.15 };
+  const full  = { transform: 'translate(0, 0) scale(1)', opacity: 1 };
+  return lessonPanel.animate(open ? [small, full] : [full, small],
+    { duration: open ? 640 : 520, easing: EASE });
+}
+
+function openLesson(){
+  if (lessonOpen || panelOpen) return;
+  closePromise(); closeGive();
+  lessonOpen = true;
+  lessonPanel.classList.add('visible');
+  scrim.classList.add('on');
+  // плеер поднимаем только сейчас: до открытия видео не грузится
+  if (!lessonLoaded) mountPlayer(lessonWhich);
+  setSeg(lessonSrc, lessonWhich);
+  lessonPanel.classList.remove('settle');
+  void lessonPanel.offsetWidth;
+  lessonPanel.classList.add('settle');
+  lessonMorph(true);
+}
+
+function closeLesson(){
+  if (!lessonOpen) return;
+  lessonOpen = false;
+  scrim.classList.remove('on');
+  lessonMorph(false).onfinish = () => {
+    if (!lessonOpen){
+      lessonPanel.classList.remove('visible', 'settle');
+      unmountPlayer();          // останавливаем воспроизведение
+    }
+  };
+}
+
+fillBtn.addEventListener('click', openLesson);
+
 /* ============================== кто уже заходил ============================== */
 
 /* Общая на всех память для статичной страницы: счётчик гостей — атомарный,
@@ -2776,6 +3025,13 @@ const STATS = {
   pollMs: 30000,
   maxFlagsShown: 12
 };
+
+/* Считаем только живых гостей на боевом домене. Локальная отладка и
+   открытие файла с диска ничего не пишут — иначе в статистику попадают
+   страны разработчика и цифры перестают быть честными. */
+const REAL_VISIT = location.protocol.startsWith('http') &&
+                   !/^(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1)/
+                     .test(location.hostname);
 
 const statsEl   = document.getElementById('stats');
 const statFlags = document.getElementById('statFlags');
@@ -2852,8 +3108,8 @@ async function countMeIn(code){
 }
 
 async function bumpVisits(){
-  // одного человека считаем один раз
-  const url = localStorage.getItem('aura_counted') ? STATS.get : STATS.hit;
+  // одного человека считаем один раз, и только на боевом домене
+  const url = (localStorage.getItem('aura_counted') || !REAL_VISIT) ? STATS.get : STATS.hit;
   try {
     const r = await fetch(url, { cache: 'no-store' });
     const v = (await r.json()).value;
@@ -3215,7 +3471,7 @@ async function initStats(){
   let { c } = await loadCountries().catch(() => ({ c: {} }));
   let mine = false;
   // каждого человека прибавляем к его стране ровно один раз
-  if (cc && !localStorage.getItem('aura_country_counted')){
+  if (REAL_VISIT && cc && !localStorage.getItem('aura_country_counted')){
     const res = await countMeIn(cc);
     if (res){ c = res.c; mine = res.isNew; localStorage.setItem('aura_country_counted', cc); }
   }
@@ -3616,7 +3872,7 @@ function giveMorph(open){
 
 function openGive(){
   if (giveOpen || panelOpen) return;
-  closePromise();
+  closePromise(); closeLesson();
   giveOpen = true;
   givePanel.classList.add('visible');
   scrim.classList.add('on');
@@ -3686,7 +3942,7 @@ function promiseMorph(open){
 }
 
 function openPromise(){
-  if (promiseOpen || panelOpen) return;
+  if (promiseOpen || panelOpen || lessonOpen) return;
   promiseOpen = true; promiseAnimating = true;
   promisePanel.classList.add('visible');
   scrim.classList.add('on');
@@ -3819,13 +4075,14 @@ function closePanel(){
   };
 }
 
-fab.addEventListener('click', () => { closePromise(); closeGive(); openPanel(); });
-scrim.addEventListener('click', () => { closePanel(); closePromise(); closeGive(); });
+fab.addEventListener('click', () => { closePromise(); closeGive(); closeLesson(); openPanel(); });
+scrim.addEventListener('click', () => { closePanel(); closePromise(); closeGive(); closeLesson(); });
 window.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   closePanel();
   closePromise();
   closeGive();
+  closeLesson();
 });
 
 saveBtn.addEventListener('click', () => {
