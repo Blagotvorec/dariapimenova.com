@@ -347,6 +347,95 @@
     color:rgba(245,244,240,.26);
   }
 
+  /* тонкая черта, отделяющая уроки от «и ещё» */
+  .course-div{
+    height:1px;margin:18px auto 16px;width:70%;
+    background:linear-gradient(90deg,rgba(255,214,150,0),rgba(255,214,150,.32),rgba(255,214,150,0));
+  }
+  /* Кинематографичная карточка: тёмный кадр, тёплый ключевой свет слева,
+     киноплёночное зерно и мягкие полосы кашетирования сверху и снизу. */
+  #seriesBtn{
+    position:relative;overflow:hidden;width:100%;
+    appearance:none;cursor:pointer;text-align:left;padding:0;
+    border-radius:20px;
+    background:linear-gradient(120deg,#241a12 0%,#160f0b 46%,#0d0a08 100%);
+    border:1px solid rgba(255,206,150,.26);
+    box-shadow:0 16px 46px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,224,180,.28);
+    transition:transform .38s cubic-bezier(.34,1.4,.4,1),
+               box-shadow .38s,border-color .38s;
+  }
+  /* полосы кашетирования — кадр читается как киношный */
+  #seriesBtn .film{
+    position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:
+      linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0) 14%),
+      linear-gradient(0deg,rgba(0,0,0,.55),rgba(0,0,0,0) 14%);
+  }
+  #seriesBtn .grain{
+    position:absolute;inset:0;pointer-events:none;z-index:2;opacity:.07;
+    background-image:radial-gradient(rgba(255,255,255,.9) .5px,transparent .5px);
+    background-size:3px 3px;mix-blend-mode:overlay;
+  }
+  /* тёплый ключевой свет: льётся из-за левого плеча и дышит */
+  #seriesBtn .key{
+    position:absolute;inset:-30%;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(46% 70% at 14% 34%,rgba(255,186,104,.5),transparent 62%),
+      radial-gradient(34% 54% at 4% 74%,rgba(255,132,72,.3),transparent 62%);
+    filter:blur(12px);
+    animation:keyLight 7s ease-in-out infinite;
+  }
+  @keyframes keyLight{
+    0%,100%{opacity:.75;transform:translate(0,0) scale(1)}
+    50%{opacity:1;transform:translate(3%,-2%) scale(1.08)}
+  }
+  #seriesBtn .body{
+    position:relative;z-index:3;
+    display:flex;align-items:center;gap:15px;
+    padding:17px 17px 17px 18px;
+  }
+  #seriesBtn:hover{
+    transform:translateY(-1px) scale(1.012);
+    border-color:rgba(255,206,150,.6);
+    box-shadow:0 24px 64px rgba(255,150,70,.22),inset 0 1px 0 rgba(255,224,180,.45);
+  }
+  #seriesBtn:active{transform:scale(.986)}
+  /* кнопка воспроизведения со световым кольцом */
+  #seriesBtn .play{
+    flex:none;position:relative;width:42px;height:42px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(145deg,#ffe1ad,#ffb877);
+    color:#2a1a0a;
+    box-shadow:0 6px 20px rgba(255,160,80,.42);
+  }
+  #seriesBtn .play::before{
+    content:'';position:absolute;inset:-6px;border-radius:50%;
+    border:1px solid rgba(255,196,130,.5);
+    animation:playRing 3.4s ease-out infinite;
+  }
+  @keyframes playRing{
+    0%{transform:scale(.86);opacity:.9}
+    70%,100%{transform:scale(1.32);opacity:0}
+  }
+  #seriesBtn .play svg{width:16px;height:16px;margin-left:2px}
+  #seriesBtn .tx{flex:1;min-width:0}
+  #seriesBtn .tx u{
+    display:block;text-decoration:none;
+    font-size:8.5px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;
+    color:rgba(255,196,132,.72);
+  }
+  #seriesBtn .tx i{
+    display:block;margin-top:5px;font-style:normal;
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:17px;font-weight:500;letter-spacing:.02em;color:#fdf3e4;
+  }
+  #seriesBtn .tx b{
+    display:block;margin-top:4px;
+    font-size:9.5px;font-weight:300;letter-spacing:.1em;text-transform:uppercase;
+    color:rgba(245,232,214,.42);
+  }
+  #seriesBtn .go{flex:none;font-size:17px;line-height:1;color:rgba(255,206,150,.6)}
+
   /* ---------- окно задания: стекло с толщиной ---------- */
   #taskPanel{
     pointer-events:auto;
@@ -1371,6 +1460,24 @@
       </div>
       <div class="lessons" id="courseList"></div>
       <div class="course-note">следующие уроки открываются по мере прохождения</div>
+
+      <div class="course-div"></div>
+      <button id="seriesBtn">
+        <span class="film" aria-hidden="true"></span>
+        <span class="grain" aria-hidden="true"></span>
+        <span class="key" aria-hidden="true"></span>
+        <span class="body">
+          <span class="play">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 6.5l9 5.5-9 5.5z"/></svg>
+          </span>
+          <span class="tx">
+            <u>смотреть вместе с нами</u>
+            <i>Сериал об Иисусе</i>
+            <b>сериал о жизни Христа · в Telegram</b>
+          </span>
+          <span class="go">→</span>
+        </span>
+      </button>
     </div>
   </div>
 </div>
@@ -3294,6 +3401,7 @@ const taskPanel    = document.getElementById('taskPanel');
 const taskWrite    = document.getElementById('taskWrite');
 
 const CURATOR = 'https://t.me/vashe_velikolepie';
+const SERIES  = 'https://t.me/+DWdSdorxCOw3NjQy';
 
 let lessonOpen = false, courseOpen = false, taskOpen = false;
 let lessonWhich = 'yt', lessonLoaded = false, lessonItem = WEBINAR, cameFromCourse = false;
@@ -3487,6 +3595,10 @@ lessonDone.addEventListener('click', () => {
 
 taskWrite.addEventListener('click', () => {
   window.open(CURATOR, '_blank', 'noopener');
+});
+
+document.getElementById('seriesBtn').addEventListener('click', () => {
+  window.open(SERIES, '_blank', 'noopener');
 });
 
 /* ============================== кто уже заходил ============================== */
