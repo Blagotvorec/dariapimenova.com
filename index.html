@@ -2947,7 +2947,8 @@ async function showFlag(code){
   const px = octx.getImageData(0, 0, cols, rows).data;
 
   const fw = Math.min(470, W * 0.76);
-  const fh = fw * rows / cols;
+  const cell = fw / cols;
+  const fh = cell * rows;
   const ox = (W - fw) / 2, oy = H / 2 - fh / 2 - 26;
   const cx = W / 2, cy = oy + fh / 2;
   const hx = fw / 2, hy = fh / 2;
@@ -2961,83 +2962,59 @@ async function showFlag(code){
   pxc.imageSmoothingQuality = 'high';
   pxc.drawImage(img, 0, 0, pixCv.width, pixCv.height);
 
-  /* ---------- атомы ----------
-     Каждый несёт цвет своей точки флага. Чтобы красить пачками, атомы
-     разложены по группам близких цветов и внутри группы — по трём волнам
-     проявления: часть атомов вспыхивает цветом рано, часть позже. */
+  /* Собственный цвет флага: берём среднее и поднимаем насыщенность, иначе
+     у трёхцветных флагов среднее уходит в серость. К этому цвету свет
+     атомов уводится только под конец — золото остаётся основой. */
+  let sr = 0, sg = 0, sb = 0, sn = 0;
+  for (let i = 0; i < px.length; i += 4){
+    if (px[i + 3] < 40) continue;
+    sr += px[i]; sg += px[i + 1]; sb += px[i + 2]; sn++;
+  }
+  let FR = 230, FG = 190, FB = 130;
+  if (sn){
+    const ar = sr / sn, ag = sg / sn, ab = sb / sn;
+    const mid = (ar + ag + ab) / 3;
+    const sat = v => Math.max(40, Math.min(255, mid + (v - mid) * 1.9));
+    FR = sat(ar); FG = sat(ag); FB = sat(ab);
+  }
+
   const AN = mob ? 6000 : 13000;
   const acols = Math.max(8, Math.round(Math.sqrt(AN * cols / rows)));
   const arows = Math.max(6, Math.round(AN / acols));
   const AW = 0.23, EPS = 1e-6;
 
-  const raw_ = [];
-  const bucketMap = new Map();
+  const aX = [], aY = [], aK = [], aA = [], aF = [], aP = [], aS = [], aD = [];
   for (let gy = 0; gy < arows; gy++)
     for (let gx = 0; gx < acols; gx++){
       const u = (gx + 0.5) / acols, v = (gy + 0.5) / arows;
       const sx = Math.min(cols - 1, (u * cols) | 0), sy = Math.min(rows - 1, (v * rows) | 0);
-      const o = (sy * cols + sx) * 4;
-      if (px[o + 3] < 40) continue;
-
-      const r8 = px[o], g8 = px[o + 1], b8 = px[o + 2];
-      const wave = (Math.random() * 3) | 0;
-      const key = ((r8 >> 4) << 11) | ((g8 >> 4) << 7) | ((b8 >> 4) << 3) | wave;
-      let bk = bucketMap.get(key);
-      if (!bk){
-        bk = { r: 0, g: 0, b: 0, n: 0, rev: (wave * 0.16) + Math.random() * 0.2, list: [] };
-        bucketMap.set(key, bk);
-      }
-      bk.r += r8; bk.g += g8; bk.b += b8; bk.n++;
+      if (px[(sy * cols + sx) * 4 + 3] < 40) continue;
 
       const X = u * 2 - 1, Y = v * 2 - 1;
       const rr = Math.max(EPS, Math.hypot(X, Y));
       const co = Math.max(EPS, Math.abs(X) / rr), si = Math.max(EPS, Math.abs(Y) / rr);
       const rH = Math.min(1 / co, AW / si);
       const rV = Math.min(AW / co, 1 / si);
-      bk.list.push(raw_.length);
-      raw_.push({
-        X, Y,
-        kc: Math.min(1, Math.max(rH, rV) / Math.min(1 / co, 1 / si)),
-        fam: (gx + gy) & 1 ? 1 : -1,          // два встречных семейства нитей
-        amp: 0.03 + Math.random() * 0.10,
-        frq: 4 + Math.random() * 9,
-        phs: Math.random() * 6.283,
-        spd: 0.5 + Math.random() * 1.2,
-        dly: Math.random() * 0.26,
-        wav: (u * 0.5) + Math.random() * 0.16,   // волна распада при уходе
-        arc: (Math.random() - 0.5) * 340
-      });
+      aX.push(X); aY.push(Y);
+      aK.push(Math.min(1, Math.max(rH, rV) / Math.min(1 / co, 1 / si)));
+      aA.push(0.05 + Math.random() * 0.30);
+      aF.push(4 + Math.random() * 9);
+      aP.push(Math.random() * 6.283);
+      aS.push(0.5 + Math.random() * 1.3);
+      aD.push(Math.random() * 0.26);
     }
 
-  // раскладываем атомы по группам подряд, чтобы рисовать диапазонами
-  const buckets = [...bucketMap.values()].filter(b => b.n);
-  const N = raw_.length;
-  const AX = new Float32Array(N), AY = new Float32Array(N), KC = new Float32Array(N);
-  const FAM = new Int8Array(N), AMP = new Float32Array(N), FRQ = new Float32Array(N);
-  const PHS = new Float32Array(N), SPD = new Float32Array(N), DLY = new Float32Array(N);
-  const WAV = new Float32Array(N), ARC = new Float32Array(N);
+  const N = aX.length;
+  const AX = Float32Array.from(aX), AY = Float32Array.from(aY), KC = Float32Array.from(aK);
+  const AMP = Float32Array.from(aA), FRQ = Float32Array.from(aF);
+  const PHS = Float32Array.from(aP), SPD = Float32Array.from(aS), DLY = Float32Array.from(aD);
   const CURX = new Float32Array(N), CURY = new Float32Array(N);
   const PRVX = new Float32Array(N), PRVY = new Float32Array(N);
-  let w = 0;
-  for (const b of buckets){
-    b.from = w;
-    b.cr = b.r / b.n; b.cg = b.g / b.n; b.cb = b.b / b.n;
-    for (const idx of b.list){
-      const a = raw_[idx];
-      AX[w] = a.X; AY[w] = a.Y; KC[w] = a.kc; FAM[w] = a.fam;
-      AMP[w] = a.amp; FRQ[w] = a.frq; PHS[w] = a.phs; SPD[w] = a.spd;
-      DLY[w] = a.dly; WAV[w] = a.wav; ARC[w] = a.arc;
-      w++;
-    }
-    b.to = w;
-    b.list = null;
-  }
 
   const ease = p => 1 - Math.pow(1 - p, 3);
   const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
   const smooth = (a, b, x) => { const k = clamp01((x - a) / (b - a)); return k * k * (3 - 2 * k); };
 
-  /* ---------- подпись ---------- */
   const nm = regionName(code);
   flagName.className = '';
   flagName.innerHTML = '';
@@ -3058,15 +3035,12 @@ async function showFlag(code){
   flagCtx.clearRect(0, 0, W, H);
 
   const ASSEMBLE = 5400;
-  const NLENS = 15;                        // линзовидных ячеек вдоль рукава
-  const rmax = Math.hypot(hx, hy) * 1.5;
 
   function step(raw, t, pull, first){
     const rot = 0.22 * Math.sin(t * 0.3);
     for (let i = 0; i < N; i++){
       const d = DLY[i];
-      // крест держит форму первую треть и только потом разворачивается
-      const own = smooth(0.34, 0.97, clamp01((raw - d) / (1 - d)));
+      const own = ease(clamp01((raw - d) / (1 - d)));
       const c = 1 - own;
       const burst = smooth(0, 0.16, raw + d * 0.4);
 
@@ -3075,42 +3049,19 @@ async function showFlag(code){
 
       const sc = (1 + 0.5 * c) * burst;
       const ang = rot * c;
-      const cs = Math.cos(ang), sn = Math.sin(ang);
+      const cs = Math.cos(ang), sn2 = Math.sin(ang);
       const syr = hy + (hx - hy) * c;
-      let ax = (x * cs - y * sn) * sc * hx;
-      let ay = (x * sn + y * cs) * sc * syr;
+      let ax = (x * cs - y * sn2) * sc * hx;
+      let ay = (x * sn2 + y * cs) * sc * syr;
 
       const r = Math.sqrt(ax * ax + ay * ay) + 0.001;
+      const w = c * AMP[i] * hy * 0.55 * Math.sin(r * FRQ[i] * 0.012 + PHS[i] + t * SPD[i]);
       const nx = -ay / r, ny = ax / r;
-
-      /* плетение: два встречных семейства с общими узлами вдоль луча —
-         между узлами нити расходятся, оставляя линзовидные просветы */
-      const lens = c * FAM[i] * hy * 0.34 *
-                   Math.sin(Math.PI * NLENS * (r / rmax) - t * 0.55);
-      // и лёгкое собственное порхание, чтобы строй дышал
-      const flut = c * AMP[i] * hy * 0.5 *
-                   Math.sin(r * FRQ[i] * 0.012 + PHS[i] + t * SPD[i]);
-      const wOff = lens + flut;
-      ax += nx * wOff;
-      ay += ny * wOff * 0.42;
+      ax += nx * w;
+      ay += ny * w * 0.35;
 
       let fx = cx + ax, fy = cy + ay;
-
-      if (pull > 0){
-        // уход по дуге: волна распада бежит по флагу слева направо
-        const q = clamp01((pull - WAV[i]) / (1 - WAV[i]));
-        if (q > 0){
-          const e = ease(q);
-          const tx = target.x, ty = target.y;
-          const mx = (fx + tx) / 2, my = (fy + ty) / 2;
-          const ddx = tx - fx, ddy = ty - fy;
-          const dl = Math.hypot(ddx, ddy) || 1;
-          const kx = mx - (ddy / dl) * ARC[i], ky = my + (ddx / dl) * ARC[i];
-          const om = 1 - e;
-          fx = om * om * fx + 2 * om * e * kx + e * e * tx;
-          fy = om * om * fy + 2 * om * e * ky + e * e * ty;
-        }
-      }
+      if (pull){ fx += (target.x - fx) * pull; fy += (target.y - fy) * pull; }
 
       if (first){ PRVX[i] = fx; PRVY[i] = fy; }
       else { PRVX[i] = CURX[i]; PRVY[i] = CURY[i]; }
@@ -3118,45 +3069,43 @@ async function showFlag(code){
     }
   }
 
-  // золото, из которого атомы разгораются в свой цвет
-  const GR = 255, GG = 232, GB = 178;
+  /* Цвет света: от глубокой янтарной подложки через золото к тёплому белому.
+     mix — насколько свет уже ушёл в собственный цвет флага. */
+  const mixTo = (r, g, b, k) =>
+    'rgba(' + ((r + (FR - r) * k) | 0) + ',' +
+              ((g + (FG - g) * k) | 0) + ',' +
+              ((b + (FB - b) * k) | 0) + ',';
 
   function paintTrails(alpha, mix){
     if (alpha <= 0.004) return;
+    const pth = new Path2D();
+    for (let i = 0; i < N; i++){
+      pth.moveTo(PRVX[i], PRVY[i]);
+      pth.lineTo(CURX[i], CURY[i]);
+    }
+    const k = mix * 0.62;                       // золото не отдаём полностью
     flagCtx.globalCompositeOperation = 'lighter';
     flagCtx.lineCap = 'round';
-    for (const b of buckets){
-      const pth = new Path2D();
-      for (let i = b.from; i < b.to; i++){
-        pth.moveTo(PRVX[i], PRVY[i]);
-        pth.lineTo(CURX[i], CURY[i]);
-      }
-      const k = smooth(b.rev, b.rev + 0.45, mix);      // насколько уже цветной
-      const r = GR + (b.cr - GR) * k;
-      const g = GG + (b.cg - GG) * k;
-      const bl = GB + (b.cb - GB) * k;
-      flagCtx.lineWidth = 2.2;
-      flagCtx.strokeStyle = 'rgba(' + (r | 0) + ',' + (g | 0) + ',' + (bl | 0) + ',' + alpha * 0.15 + ')';
-      flagCtx.stroke(pth);
-      flagCtx.lineWidth = 0.9;
-      flagCtx.strokeStyle = 'rgba(' + (r | 0) + ',' + (g | 0) + ',' + (bl | 0) + ',' + alpha * 0.44 + ')';
-      flagCtx.stroke(pth);
-      flagCtx.lineWidth = 0.42;
-      flagCtx.strokeStyle = 'rgba(' + ((r + (255 - r) * 0.6) | 0) + ',' +
-                                      ((g + (255 - g) * 0.6) | 0) + ',' +
-                                      ((bl + (255 - bl) * 0.6) | 0) + ',' + alpha * 0.9 + ')';
-      flagCtx.stroke(pth);
-    }
+    flagCtx.lineWidth = 2.6;
+    flagCtx.strokeStyle = mixTo(196, 126, 42, k) + alpha * 0.17 + ')';
+    flagCtx.stroke(pth);
+    flagCtx.lineWidth = 1.05;
+    flagCtx.strokeStyle = mixTo(255, 206, 132, k * 0.8) + alpha * 0.44 + ')';
+    flagCtx.stroke(pth);
+    flagCtx.lineWidth = 0.5;
+    flagCtx.strokeStyle = mixTo(255, 248, 232, k * 0.45) + alpha * 0.92 + ')';
+    flagCtx.stroke(pth);
     flagCtx.globalCompositeOperation = 'source-over';
   }
 
-  function core(alpha, rad){
+  function core(alpha, rad, mix){
     if (alpha <= 0.004) return;
+    const k = mix * 0.5;
     flagCtx.globalCompositeOperation = 'lighter';
     const g = flagCtx.createRadialGradient(cx, cy, 0, cx, cy, rad);
-    g.addColorStop(0, 'rgba(255,222,164,' + alpha + ')');
-    g.addColorStop(0.35, 'rgba(240,180,96,' + alpha * 0.4 + ')');
-    g.addColorStop(1, 'rgba(220,150,70,0)');
+    g.addColorStop(0, mixTo(255, 240, 205, k * 0.4) + alpha + ')');
+    g.addColorStop(0.3, mixTo(248, 186, 96, k) + alpha * 0.42 + ')');
+    g.addColorStop(1, mixTo(196, 120, 48, k) + '0)');
     flagCtx.fillStyle = g;
     flagCtx.fillRect(cx - rad, cy - rad, rad * 2, rad * 2);
     flagCtx.globalCompositeOperation = 'source-over';
@@ -3170,6 +3119,7 @@ async function showFlag(code){
 
       if (phase === 'in'){
         const raw = clamp01((now - t0) / ASSEMBLE);
+        const mix = smooth(0.5, 0.96, raw);
 
         flagCtx.globalCompositeOperation = 'source-over';
         flagCtx.fillStyle = 'rgba(7,7,9,0.115)';
@@ -3178,11 +3128,10 @@ async function showFlag(code){
         step(raw, t, 0, firstFrame);
         firstFrame = false;
 
-        core(0.5 * (1 - smooth(0.05, 0.5, raw)) + 0.12 * (1 - raw), fw * (0.22 + 0.5 * raw));
-        // цвет проступает в атомах задолго до появления самого флага
-        paintTrails(1 - smooth(0.88, 1, raw), smooth(0.18, 0.92, raw));
+        core(0.5 * (1 - smooth(0.05, 0.5, raw)) + 0.12 * (1 - raw), fw * (0.22 + 0.5 * raw), mix);
+        paintTrails(1 - smooth(0.86, 1, raw), mix);
 
-        const pa = smooth(0.86, 1, raw);
+        const pa = smooth(0.84, 1, raw);
         if (pa > 0){
           flagCtx.globalAlpha = pa;
           flagCtx.drawImage(pixCv, ox, oy, fw, fh);
@@ -3211,29 +3160,22 @@ async function showFlag(code){
         }
 
       } else {
-        const el = (now - outAt) / 1600;
-        const q = clamp01(el);
+        const q = ease(clamp01((now - outAt) / 1300));
         flagCtx.globalCompositeOperation = 'source-over';
-        flagCtx.fillStyle = 'rgba(7,7,9,0.115)';
+        flagCtx.fillStyle = 'rgba(7,7,9,0.14)';
         flagCtx.fillRect(0, 0, W, H);
-
-        // вспышка в момент прощания, потом флаг стирается волной слева направо
-        core(0.34 * (1 - smooth(0, 0.35, q)), fw * (0.4 + q * 0.5));
-        step(1, t, q, false);
-        paintTrails(0.95 * (1 - smooth(0.55, 1, q)), 1);
-
-        const wipe = smooth(0, 0.62, q);
-        if (wipe < 1){
+        step(1 - q * 0.55, t, q, false);
+        paintTrails(0.85 * (1 - q), 1);
+        core(0.2 * (1 - q), fw * 0.5, 1);
+        const sc = 1 - q;
+        if (sc > 0.02){
           flagCtx.save();
-          flagCtx.beginPath();
-          flagCtx.rect(ox + fw * wipe, oy, fw * (1 - wipe), fh);
-          flagCtx.clip();
-          flagCtx.globalAlpha = 1 - smooth(0.45, 0.9, q);
-          flagCtx.drawImage(pixCv, ox, oy, fw, fh);
+          flagCtx.globalAlpha = 1 - q;
+          flagCtx.translate(cx + (target.x - cx) * q, cy + (target.y - cy) * q);
+          flagCtx.scale(sc, sc);
+          flagCtx.drawImage(pixCv, -hx, -hy, fw, fh);
           flagCtx.restore();
-          flagCtx.globalAlpha = 1;
         }
-
         if (q >= 1){
           flagFx.classList.remove('on', 'out');
           flagCap.classList.remove('on');
