@@ -2718,6 +2718,7 @@ const STATS = {
   get:   'https://abacus.jasoncameron.dev/get/dariapimenova/visits',
   blob:  'https://jsonblob.com/api/jsonBlob/019fd244-54c2-7283-89c2-117ba77f32a2',
   flag:  code => 'https://flagcdn.com/w320/' + code.toLowerCase() + '.png',
+  flagBig: code => 'https://flagcdn.com/w640/' + code.toLowerCase() + '.png',
   tiny:  code => 'https://flagcdn.com/w40/' + code.toLowerCase() + '.png',
   pollMs: 30000,
   maxFlagsShown: 12
@@ -2853,14 +2854,14 @@ async function nextFlag(){
 }
 
 async function showFlag(code){
-  const img = await loadImage(STATS.flag(code));
+  const img = await loadImage(STATS.flagBig(code));
 
   const W = innerWidth, H = innerHeight;
   const dpr = Math.min(2, devicePixelRatio || 1);
   const mob = W < 600;
 
-  // пиксели мельчайшие — сетка вдвое плотнее прежней
-  const cols = mob ? 100 : 140;
+  // пиксели предельно мелкие — берём флаг в большом разрешении
+  const cols = mob ? 150 : 210;
   const rows = Math.max(6, Math.round(cols * img.naturalHeight / img.naturalWidth));
 
   const off = document.createElement('canvas');
@@ -2869,19 +2870,18 @@ async function showFlag(code){
   octx.drawImage(img, 0, 0, cols, rows);
   const px = octx.getImageData(0, 0, cols, rows).data;
 
-  const fw = Math.min(460, W * 0.74);
+  const fw = Math.min(470, W * 0.76);
   const cell = fw / cols;
   const fh = cell * rows;
   const ox = (W - fw) / 2, oy = H / 2 - fh / 2 - 30;
   const cx = W / 2, cy = oy + fh / 2;
 
-  // сам флаг из мельчайших пикселей собираем один раз в отдельный холст
   const pixCv = document.createElement('canvas');
   pixCv.width = Math.round(fw * dpr);
   pixCv.height = Math.round(fh * dpr);
   const pxc = pixCv.getContext('2d');
   pxc.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const gap = Math.max(0.3, cell * 0.16);
+  const gap = cell * 0.13;
   for (let y = 0; y < rows; y++)
     for (let x = 0; x < cols; x++){
       const i = (y * cols + x) * 4;
@@ -2890,10 +2890,86 @@ async function showFlag(code){
       pxc.fillRect(x * cell, y * cell, cell - gap, cell - gap);
     }
 
-  // нити плетения — каждая четвёртая линия сетки
-  const strandRows = [], strandCols = [];
-  for (let y = 0; y < rows; y += 3) strandRows.push(y);
-  for (let x = 0; x < cols; x += 3) strandCols.push(x);
+  /* ---- параметрическая оболочка ----
+     Две встречные синусоиды с общими узлами дают цепочку линзовидных ячеек —
+     ровно та решётка, что на референсе. Решётка натянута на конус и видна
+     в перспективе; по мере сборки конус разворачивается в плоский флаг. */
+  const NC = 18;            // ячеек поперёк
+  const NR = 11;            // рядов линз
+  const SAMP = mob ? 64 : 88;
+  const WRAP0 = 2.45;       // угол обхвата конуса в начале
+  const FLARE0 = 0.5;       // насколько конус расширяется книзу
+  const focal = fw * 1.7;
+  const pt = [0, 0];
+
+  function surf(u, v, p, t, out){
+    const k = 1 - p;
+    const wrap = Math.max(0.0009, WRAP0 * k);
+    const R = fw / wrap;
+    const th = (u - 0.5) * wrap + 0.42 * k * Math.sin(t * 0.42);
+    const rad = R * (1 + FLARE0 * k * (v - 0.5));
+    const X = rad * Math.sin(th);
+    const Z = R - rad * Math.cos(th);
+    const Y = (v - 0.5) * fh * (1 + 0.12 * k);
+    const pe = focal / (focal + Z);
+    out[0] = cx + X * pe;
+    out[1] = cy + Y * pe;
+  }
+
+  // одна геометрия — два обвода: широкий мягкий и тонкий яркий
+  function lattice(p, t, alpha, pull){
+    if (alpha <= 0.002) return;
+    const k = 1 - p;
+    const open = 0.30 + 0.70 * k;              // насколько раскрыты линзы
+    const amp = (0.46 / NC) * open;
+    const wob = t * 0.5;
+    const path = new Path2D();
+
+    for (let i = 0; i < NC; i++){
+      const u0 = (i + 0.5) / NC;
+      for (let sgn = -1; sgn <= 1; sgn += 2){
+        for (let sIdx = 0; sIdx <= SAMP; sIdx++){
+          const v = sIdx / SAMP;
+          const u = u0 + sgn * amp * Math.sin(Math.PI * NR * v + wob);
+          surf(u, v, p, t, pt);
+          let x = pt[0], y = pt[1];
+          if (pull){ x += (target.x - x) * pull; y += (target.y - y) * pull; }
+          if (sIdx) path.lineTo(x, y); else path.moveTo(x, y);
+        }
+      }
+    }
+    // кольца по узлам — они держат ряды, как на референсе
+    for (let m = 0; m <= NR; m++){
+      const v = m / NR;
+      for (let sIdx = 0; sIdx <= SAMP; sIdx++){
+        const u = sIdx / SAMP;
+        surf(u, v, p, t, pt);
+        let x = pt[0], y = pt[1];
+        if (pull){ x += (target.x - x) * pull; y += (target.y - y) * pull; }
+        if (sIdx) path.lineTo(x, y); else path.moveTo(x, y);
+      }
+    }
+
+    flagCtx.globalCompositeOperation = 'lighter';
+    flagCtx.lineJoin = flagCtx.lineCap = 'round';
+    flagCtx.lineWidth = 3.4;
+    flagCtx.strokeStyle = 'rgba(255,236,205,' + alpha * 0.3 + ')';
+    flagCtx.stroke(path);
+    flagCtx.lineWidth = 0.75;
+    flagCtx.strokeStyle = 'rgba(255,247,232,' + alpha + ')';
+    flagCtx.stroke(path);
+    flagCtx.globalCompositeOperation = 'source-over';
+  }
+
+  function glow(alpha){
+    if (alpha <= 0.002) return;
+    const g = flagCtx.createRadialGradient(cx, cy, 0, cx, cy, fw * 0.7);
+    g.addColorStop(0, 'rgba(255,208,138,' + alpha + ')');
+    g.addColorStop(0.45, 'rgba(255,190,120,' + alpha * 0.34 + ')');
+    g.addColorStop(1, 'rgba(255,180,110,0)');
+    flagCtx.fillStyle = g;
+    flagCtx.fillRect(cx - fw, cy - fw, fw * 2, fw * 2);
+  }
 
   flagCap.style.top = (oy + fh + 40) + 'px';
   flagName.textContent = regionName(code);
@@ -2903,76 +2979,10 @@ async function showFlag(code){
   flagCv.width = W * dpr; flagCv.height = H * dpr;
   flagCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const ASSEMBLE = 2300;
-  const amp = Math.min(W, H) * 0.26;
+  const ASSEMBLE = 4200;      // оболочка живёт почти всю анимацию
+  const SHOW_AT = 0.87;       // флаг проступает только в самом конце
   const ease = p => 1 - Math.pow(1 - p, 3);
   const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
-
-  /* где точка сетки находится при готовности p: пока p мал, нити разведены
-     и выгнуты волнами, к единице стягиваются в контур флага и продолжают
-     едва заметно дышать */
-  function place(gx, gy, p, t, out){
-    const tx = ox + gx * cell + cell / 2 - cx;
-    const ty = oy + gy * cell + cell / 2 - cy;
-    const rest = Math.pow(1 - p, 1.5);
-    const spread = 1 + 0.6 * rest;
-    let x = tx * spread, y = ty * spread;
-
-    // кручение тем сильнее, чем ближе к центру: прямые линии сетки
-    // становятся спиралями и рассекают друг друга
-    const r = Math.hypot(x, y);
-    const ang = rest * ((1.5 - r / (fw * 0.85)) * 1.15 + Math.sin(t * 0.8) * 0.3);
-    const cs = Math.cos(ang), sn = Math.sin(ang);
-    const rx = x * cs - y * sn, ry = x * sn + y * cs;
-
-    const a = amp * rest;
-    out[0] = cx + rx
-           + a * Math.sin(ty * 0.030 + t * 1.5)
-           + 1.6 * Math.sin(ty * 0.05 + t * 1.1);
-    out[1] = cy + ry
-           + a * 0.45 * Math.cos(tx * 0.028 + t * 1.2)
-           + 1.2 * Math.cos(tx * 0.045 + t * 0.9);
-  }
-
-  const pt = [0, 0];
-
-  function strands(p, t, alpha, pull){
-    if (alpha <= 0.002) return;
-    flagCtx.globalCompositeOperation = 'lighter';
-    flagCtx.lineWidth = 0.55;
-    flagCtx.strokeStyle = 'rgba(255,236,203,' + alpha + ')';
-    for (const gy of strandRows){
-      flagCtx.beginPath();
-      for (let k = 0; k < cols; k += 2){
-        place(k, gy, p, t, pt);
-        let x = pt[0], y = pt[1];
-        if (pull){ x += (target.x - x) * pull; y += (target.y - y) * pull; }
-        if (k) flagCtx.lineTo(x, y); else flagCtx.moveTo(x, y);
-      }
-      flagCtx.stroke();
-    }
-    for (const gx of strandCols){
-      flagCtx.beginPath();
-      for (let k = 0; k < rows; k += 2){
-        place(gx, k, p, t, pt);
-        let x = pt[0], y = pt[1];
-        if (pull){ x += (target.x - x) * pull; y += (target.y - y) * pull; }
-        if (k) flagCtx.lineTo(x, y); else flagCtx.moveTo(x, y);
-      }
-      flagCtx.stroke();
-    }
-    flagCtx.globalCompositeOperation = 'source-over';
-  }
-
-  function glow(alpha){
-    if (alpha <= 0.002) return;
-    const g = flagCtx.createRadialGradient(cx, cy, 0, cx, cy, fw * 0.62);
-    g.addColorStop(0, 'rgba(255,208,138,' + alpha + ')');
-    g.addColorStop(0.45, 'rgba(255,190,120,' + alpha * 0.35 + ')');
-    g.addColorStop(1, 'rgba(255,180,110,0)');
-    flagCtx.fillStyle = g;
-    flagCtx.fillRect(cx - fw, cy - fw, fw * 2, fw * 2);
-  }
 
   let phase = 'in', t0 = performance.now(), outAt = 0, target = null;
 
@@ -2986,20 +2996,22 @@ async function showFlag(code){
         const p = ease(raw);
         if (phase === 'in' && raw >= 1){ phase = 'hold'; flagCap.classList.add('on'); }
 
-        glow(0.30 * Math.sin(Math.min(1, raw) * Math.PI) + 0.10);
-        // нити ярче всего в середине сборки, к концу остаётся лёгкая сетка
-        strands(p, t, 0.075 + 0.15 * Math.sin(Math.min(1, raw) * Math.PI), 0);
+        glow(0.26 * Math.sin(Math.min(1, raw) * Math.PI) + 0.08);
 
-        const pa = clamp01((raw - 0.55) / 0.42);
+        const pa = clamp01((raw - SHOW_AT) / (1 - SHOW_AT));
+        // решётка гаснет ровно настолько, насколько проступает флаг
+        lattice(p, t, 0.30 * (1 - 0.72 * pa), 0);
+
         if (pa > 0){
           flagCtx.globalAlpha = pa;
           flagCtx.drawImage(pixCv, ox, oy, fw, fh);
           flagCtx.globalAlpha = 1;
         }
       } else {
-        const q = ease(clamp01((now - outAt) / 1000));
-        glow(0.28 * (1 - q));
-        strands(1 - q * 0.9, t, 0.20 * (1 - q), q);
+        const q = ease(clamp01((now - outAt) / 1100));
+        glow(0.24 * (1 - q));
+        // на выходе оболочка снова раскрывается и утягивается в строку
+        lattice(1 - q * 0.85, t, 0.26 * (1 - q), q);
         const sc = 1 - q;
         if (sc > 0.01){
           flagCtx.save();
@@ -3068,7 +3080,9 @@ async function initStats(){
       const { c: now } = await loadCountries();
       const seenNow = seenFlags();
       const fresh = Object.keys(now).filter(x => !seenNow.has(x));
-      statCountries = now;
+      // дописываем, а не заменяем: пустой или запоздавший ответ хранилища
+      // не должен стирать уже показанные флажки
+      statCountries = Object.assign({}, statCountries, now);
       renderStats();                       // счёт обновляем сразу
       fresh.slice(0, 2).forEach(queueFlag);
       if (fresh.length > 2){ fresh.slice(2).forEach(x => seenNow.add(x)); saveFlags(seenNow); }
