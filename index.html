@@ -463,6 +463,28 @@
     margin-top:20px;font-size:10px;font-weight:300;
     letter-spacing:.2em;text-transform:uppercase;color:rgba(245,244,240,.34);
   }
+  .sum-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px}
+  .sum-head .give-label{margin-top:0}
+  .cur{
+    display:flex;gap:3px;padding:3px;border-radius:12px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  }
+  .cur button{
+    appearance:none;background:none;border:0;cursor:pointer;
+    min-width:32px;padding:5px 0;border-radius:9px;
+    font-family:var(--font);font-size:13px;font-weight:500;
+    color:rgba(245,244,240,.45);
+    transition:background .35s,color .35s;
+  }
+  .cur button:hover{color:rgba(245,244,240,.8)}
+  .cur button.on{
+    background:linear-gradient(135deg,rgba(230,207,154,.95),rgba(232,186,152,.8));
+    color:#1c1608;font-weight:700;
+    box-shadow:0 4px 12px rgba(230,207,154,.2),inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  .way.off{opacity:.42}
+  .way.off:hover{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.12)}
+  .way.off .go{opacity:.4}
   .sums{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
   .sums button{
     appearance:none;cursor:pointer;padding:12px 4px;border-radius:14px;
@@ -833,17 +855,20 @@
         <button data-v="month">Ежемесячно</button>
       </div>
 
-      <div class="give-label" id="sumLabel">Сумма</div>
+      <div class="sum-head">
+        <div class="give-label" id="sumLabel">Сумма</div>
+        <div class="cur" id="giveCur"></div>
+      </div>
       <div class="sums" id="giveSums"></div>
 
       <div class="give-field" id="customWrap">
         <input id="customSum" type="text" inputmode="numeric" placeholder="Своя сумма">
-        <b>₽</b>
+        <b id="customCur">₽</b>
       </div>
 
       <div class="give-field" id="incomeWrap">
         <input id="incomeSum" type="text" inputmode="numeric" placeholder="Ваш доход за месяц">
-        <b>₽</b>
+        <b id="incomeCur">₽</b>
       </div>
       <div class="tithe-out" id="titheOut"></div>
 
@@ -2626,21 +2651,76 @@ async function applySharedState(str){
 
 /* ============================== «Дать» ============================== */
 
-/* Куда ведут кнопки способов. Пока пусто — счета не подключены;
-   как появятся ссылки Stripe/PayPal/СБП, они кладутся сюда, и окно
-   начинает работать без единой правки в остальном коде.
-   links: { card: { once: 'https://…', month: 'https://…' }, … }
-   endpoint — свой обработчик, если нужен произвольный размер суммы. */
+/* Платёжные ссылки. Валюта решает, какими путями можно отправить:
+   рубли идут через lava.top, доллары и евро — через Stripe; PayPal берёт
+   любую сумму в любой валюте и умеет ежемесячные платежи.
+   Суммы, для которых нет готовой ссылки, оформляются заявкой в телеграм. */
 const GIVE = {
-  currency: '₽',
-  presets: [500, 1000, 3000, 5000],
-  ways: [
-    { id: 'card',   title: 'Банковской картой', note: 'Visa · Mastercard · Apple Pay' },
-    { id: 'paypal', title: 'PayPal',            note: 'счёт PayPal или карта' },
-    { id: 'ru',     title: 'Карта РФ · СБП',    note: 'перевод внутри России' }
-  ],
-  links: {},
-  endpoint: ''
+  tg: 'Genius_meridian_bot',        // кому уходит заявка на индивидуальную сумму
+
+  currencies: {
+    RUB: { sign: '₽', presets: [500, 1000, 3000, 5000], ways: ['ru', 'paypal'] },
+    USD: { sign: '$', presets: [10, 20, 30, 50, 100],   ways: ['card', 'paypal'] },
+    EUR: { sign: '€', presets: [10, 20, 30, 50, 100],   ways: ['card', 'paypal'], via: 'USD' }
+  },
+
+  // страны, где по умолчанию предлагаем рубли и евро; остальным — доллары
+  rubCountries: ['RU', 'BY', 'KZ', 'KG', 'AM', 'AZ', 'UZ', 'TJ', 'GE', 'MD'],
+  eurCountries: ['DE','FR','ES','IT','NL','BE','AT','PT','IE','FI','GR','SK','SI',
+                 'EE','LV','LT','LU','CY','MT','HR','PL','CZ','SE','DK','NO','CH','RO','BG','HU'],
+
+  ways: {
+    ru:     { title: 'Карта РФ · СБП',     note: 'перевод внутри России' },
+    card:   { title: 'Банковской картой',  note: 'Visa · Mastercard · Apple Pay' },
+    paypal: { title: 'PayPal',             note: 'счёт PayPal или карта' }
+  },
+
+  links: {
+    // lava.top: разовый донат принимает любую сумму, подписки — только готовые
+    ru: {
+      once:  { any: 'https://app.lava.top/chudo_tvorec?tabId=donate' },
+      month: {
+        500:  'https://app.lava.top/products/d80e78e7-513e-4fec-80fd-e19aa21c2f84/6b9d39c0-5d67-4976-b79e-23aa8bd56755',
+        1000: 'https://app.lava.top/products/d80e78e7-513e-4fec-80fd-e19aa21c2f84/9cd24bbc-e77d-492f-b97b-e8a7cfa655dd',
+        3000: 'https://app.lava.top/products/d80e78e7-513e-4fec-80fd-e19aa21c2f84/8442afdf-da2d-457d-9116-e4bfc55487cc',
+        5000: 'https://app.lava.top/products/d80e78e7-513e-4fec-80fd-e19aa21c2f84/9f356bb3-2892-466c-a00a-5a927edc855c'
+      }
+    },
+    // Stripe: суммы в долларах, при оплате показывает эквивалент в валюте карты
+    card: {
+      once: {
+        10:  'https://buy.stripe.com/cNiaEY1oZ1ye2m765P2882k',
+        20:  'https://buy.stripe.com/8x2cN64Bb3Gm7GrfGp2882l',
+        30:  'https://buy.stripe.com/28EcN66Jj2CibWH3XH2882m',
+        40:  'https://buy.stripe.com/fZubJ2aZz4KqaSD2TD2882n',
+        50:  'https://buy.stripe.com/00w7sM5FfdgW9Oz9i12882o',
+        60:  'https://buy.stripe.com/aFa5kE0kV3Gm4ufam52882p',
+        70:  'https://buy.stripe.com/00wfZiaZz5Ou9OzfGp2882q',
+        80:  'https://buy.stripe.com/7sY14o0kVa4K0dZ79T2882r',
+        90:  'https://buy.stripe.com/aFa4gAebL6Sy7Gr65P2882s',
+        100: 'https://buy.stripe.com/28E7sMffPfp46Cn0Lv2882t',
+        200: 'https://buy.stripe.com/28EeVegjTa4K7Gr3XH2882u'
+      },
+      month: {
+        10:  'https://buy.stripe.com/bJe00k0kVel0gcX1Pz2882a',
+        20:  'https://buy.stripe.com/4gM14o0kV1ye0dZ9i12882b',
+        30:  'https://buy.stripe.com/aFadRac3DdgWaSD3XH2882c',
+        50:  'https://buy.stripe.com/aFa28s4Bb1ye5yj0Lv2882d',
+        60:  'https://buy.stripe.com/bJeeVeebLdgW0dZ1Pz2882e',
+        70:  'https://buy.stripe.com/6oUeVec3D2Ci3qbbq92882f',
+        80:  'https://buy.stripe.com/aFaaEY1oZ7WC4uf2TD2882g',
+        90:  'https://buy.stripe.com/fZu28sc3D4Kqf8TeCl2882h',
+        100: 'https://buy.stripe.com/6oU9AU8Rr7WCgcXcud2882i',
+        200: 'https://buy.stripe.com/4gMcN63x7dgW9Ozam52882j',
+        300: 'https://buy.stripe.com/5kQ7sM4Bb7WCf8T65P28828'
+      }
+    },
+    // PayPal: одна ссылка на всё — сумму и периодичность выбирают на его стороне
+    paypal: {
+      once:  { any: 'https://www.paypal.com/donate/?hosted_button_id=LDWFR4SCY7U3G' },
+      month: { any: 'https://www.paypal.com/donate/?hosted_button_id=LDWFR4SCY7U3G' }
+    }
+  }
 };
 
 const WAY_ICONS = {
@@ -2658,53 +2738,133 @@ const customSum  = document.getElementById('customSum');
 const incomeWrap = document.getElementById('incomeWrap');
 const incomeSum  = document.getElementById('incomeSum');
 const titheOut   = document.getElementById('titheOut');
+const customCur  = document.getElementById('customCur');
+const incomeCur  = document.getElementById('incomeCur');
 const sumLabel   = document.getElementById('sumLabel');
 const giveNote   = document.getElementById('giveNote');
 const waysLabel  = document.getElementById('waysLabel');
 const segKind = document.getElementById('giveKind');
 const segFreq = document.getElementById('giveFreq');
 
+const giveCur = document.getElementById('giveCur');
+
 let giveOpen = false;
-let give = { kind: 'gift', freq: 'once', sum: GIVE.presets[1], custom: false };
+let give = { kind: 'gift', freq: 'once', cur: 'USD', sum: 0, custom: false };
 
 const fmtSum = n => n.toLocaleString('ru-RU');
 const digits = s => +String(s).replace(/[^\d]/g, '') || 0;
+const curInfo = () => GIVE.currencies[give.cur];
+const curSign = () => curInfo().sign;
 
-/* --- сборка списков --- */
-GIVE.presets.forEach(v => {
+/* --- валюта --- */
+Object.keys(GIVE.currencies).forEach(code => {
   const b = document.createElement('button');
-  b.textContent = fmtSum(v);
-  b.dataset.sum = v;
-  giveSums.appendChild(b);
+  b.dataset.cur = code;
+  b.textContent = GIVE.currencies[code].sign;
+  b.title = code;
+  giveCur.appendChild(b);
 });
-{
-  const b = document.createElement('button');
-  b.textContent = 'Своя';
-  b.dataset.sum = 'custom';
-  giveSums.appendChild(b);
-  giveSums.style.gridTemplateColumns = 'repeat(' + Math.min(5, GIVE.presets.length + 1) + ',1fr)';
+
+function setCurrency(code, remember){
+  if (!GIVE.currencies[code]) return;
+  give.cur = code;
+  if (remember) localStorage.setItem('aura_cur', code);
+  giveCur.querySelectorAll('button').forEach(b =>
+    b.classList.toggle('on', b.dataset.cur === code));
+  buildSums();
+  buildWays();
+  syncGive();
 }
 
-GIVE.ways.forEach(w => {
-  const b = document.createElement('button');
-  b.className = 'way';
-  b.dataset.way = w.id;
-  b.innerHTML =
-    '<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-    'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + WAY_ICONS[w.id] + '</svg></span>' +
-    '<span class="tx"><i></i><u></u></span><span class="go">→</span>';
-  b.querySelector('i').textContent = w.title;
-  b.querySelector('u').textContent = w.note;
-  giveWays.appendChild(b);
+giveCur.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  setCurrency(b.dataset.cur, true);
 });
+
+/* мгновенная догадка — по языку и часовому поясу, без обращения наружу */
+function guessCurrency(){
+  const saved = localStorage.getItem('aura_cur');
+  if (saved && GIVE.currencies[saved]){ setCurrency(saved, false); return; }
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  const lang = (navigator.language || '').toUpperCase();
+  const ruTz = /Moscow|Kaliningrad|Volgograd|Samara|Saratov|Astrakhan|Yekaterinburg|Omsk|Novosibirsk|Krasnoyarsk|Irkutsk|Chita|Yakutsk|Vladivostok|Magadan|Kamchatka|Sakhalin|Minsk|Almaty|Tashkent|Tbilisi|Yerevan|Baku|Bishkek|Chisinau/i;
+  setCurrency(ruTz.test(tz) || /^(RU|BE|KK|UZ|HY|KA|AZ|KY|TG)/.test(lang) ? 'RUB'
+            : /^Europe\//i.test(tz) ? 'EUR' : 'USD', false);
+}
+
+/* уточняем по стране — только если человек не выбрал валюту сам */
+async function refineCurrencyByIp(){
+  if (localStorage.getItem('aura_cur')) return;
+  try {
+    const res = await fetch('https://ipwho.is/?fields=country_code', { cache: 'no-store' });
+    const cc = (await res.json()).country_code;
+    if (!cc || localStorage.getItem('aura_cur')) return;
+    const code = GIVE.rubCountries.includes(cc) ? 'RUB'
+               : GIVE.eurCountries.includes(cc) ? 'EUR' : 'USD';
+    if (code !== give.cur) setCurrency(code, false);
+  } catch { /* не достучались — остаётся догадка по часовому поясу */ }
+}
+
+/* --- сборка списков под текущую валюту --- */
+function buildSums(){
+  const presets = curInfo().presets;
+  giveSums.innerHTML = '';
+  presets.forEach(v => {
+    const b = document.createElement('button');
+    b.textContent = fmtSum(v);
+    b.dataset.sum = v;
+    giveSums.appendChild(b);
+  });
+  const c = document.createElement('button');
+  c.textContent = 'Своя';
+  c.dataset.sum = 'custom';
+  giveSums.appendChild(c);
+  giveSums.style.gridTemplateColumns = 'repeat(' + (presets.length + 1) + ',1fr)';
+  if (!give.custom && !presets.includes(give.sum)) give.sum = presets[1] ?? presets[0];
+}
+
+function buildWays(){
+  giveWays.innerHTML = '';
+  curInfo().ways.forEach(id => {
+    const b = document.createElement('button');
+    b.className = 'way';
+    b.dataset.way = id;
+    b.innerHTML =
+      '<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + WAY_ICONS[id] + '</svg></span>' +
+      '<span class="tx"><i></i><u></u></span><span class="go">→</span>';
+    b.querySelector('i').textContent = GIVE.ways[id].title;
+    giveWays.appendChild(b);
+  });
+}
+
+/* какой ссылкой закрывается выбранный способ */
+function resolveWay(id){
+  const amount = giveAmount();
+  const table = GIVE.links[id] && GIVE.links[id][give.freq];
+  const link = table && (table[amount] || table.any);
+  if (link) return { link };
+  // рублёвая ежемесячная сумма вне готовых — оформляем заявкой
+  if (id === 'ru' && give.freq === 'month') return { tg: true };
+  return { none: true };
+}
+
+function tgRequest(amount){
+  const text = give.kind === 'tithe'
+    ? 'Хочу заказать индивидуальную ежемесячную десятину, моя сумма будет: '
+    : 'Хочу заказать индивидуальное ежемесячное пожертвование, моя сумма будет: ';
+  return 'https://t.me/' + GIVE.tg + '?text=' +
+         encodeURIComponent(text + fmtSum(amount) + ' ' + curSign());
+}
 
 /* --- переключатели --- */
 function moveSeg(seg, btn){
   const fill = seg.querySelector('.seg-fill');
-  const r = btn.getBoundingClientRect(), sr = seg.getBoundingClientRect();
-  if (!r.width) return;
-  fill.style.width = r.width + 'px';
-  fill.style.transform = 'translateX(' + (r.left - sr.left - 4) + 'px)';
+  // offset-координаты, а не getBoundingClientRect: те врут, пока панель
+  // разворачивается и на ней висит масштабирование
+  if (!btn.offsetWidth) return;
+  fill.style.width = btn.offsetWidth + 'px';
+  fill.style.transform = 'translateX(' + (btn.offsetLeft - 4) + 'px)';
   fill.classList.remove('squish');
   void fill.offsetWidth;
   fill.classList.add('squish');
@@ -2768,6 +2928,7 @@ function syncGive(){
   segFreq.style.opacity = tithe ? .55 : 1;
 
   sumLabel.textContent = tithe ? 'Десятина от дохода' : 'Сумма';
+  customCur.textContent = incomeCur.textContent = curSign();
   giveSums.style.display   = tithe ? 'none' : 'grid';
   incomeWrap.classList.toggle('on', tithe);
   customWrap.classList.toggle('on', !tithe && give.custom);
@@ -2780,15 +2941,30 @@ function syncGive(){
   titheOut.style.display = tithe ? 'block' : 'none';
   if (tithe)
     titheOut.innerHTML = amount
-      ? 'Десятина: <b>' + fmtSum(amount) + ' ' + GIVE.currency + '</b> каждый месяц'
+      ? 'Десятина: <b>' + fmtSum(amount) + ' ' + curSign() + '</b> каждый месяц'
       : 'Укажите доход — посчитаем десятую часть';
 
   waysLabel.textContent = amount
-    ? 'Как удобно отправить ' + fmtSum(amount) + ' ' + GIVE.currency
+    ? 'Как удобно отправить ' + fmtSum(amount) + ' ' + curSign()
     : 'Как удобно отправить';
-  giveNote.textContent = give.freq === 'month'
+
+  // подписи способов подстраиваются под сумму
+  giveWays.querySelectorAll('.way').forEach(b => {
+    const id = b.dataset.way;
+    const r = amount ? resolveWay(id) : { link: true };
+    b.classList.toggle('off', !!r.none);
+    b.querySelector('u').textContent =
+      r.tg  ? 'заказать индивидуально в Telegram' :
+      r.none ? 'нужна сумма из списка' :
+      GIVE.ways[id].note;
+  });
+
+  const notes = [];
+  notes.push(give.freq === 'month'
     ? 'Ежемесячный платёж можно отменить в любой момент.'
-    : 'Разовый платёж. Карты вне России — Stripe и PayPal, российские — СБП.';
+    : 'Разовый платёж.');
+  if (curInfo().via) notes.push('Списание пройдёт в долларах — Stripe покажет сумму в вашей валюте.');
+  giveNote.textContent = notes.join(' ');
 }
 
 /* --- запуск оплаты --- */
@@ -2799,23 +2975,17 @@ giveWays.addEventListener('click', e => {
     showToast(give.kind === 'tithe' ? 'Укажите доход за месяц' : 'Выберите сумму');
     return;
   }
-  const way = b.dataset.way;
-  const params = new URLSearchParams({
-    amount: String(amount), currency: 'RUB',
-    kind: give.kind, freq: give.freq, method: way
-  });
-
-  if (GIVE.endpoint){
-    location.href = GIVE.endpoint + (GIVE.endpoint.includes('?') ? '&' : '?') + params;
-    return;
-  }
-  const link = GIVE.links?.[way]?.[give.freq];
-  if (link){
-    window.open(link, '_blank', 'noopener');
+  const r = resolveWay(b.dataset.way);
+  if (r.link){
+    window.open(r.link, '_blank', 'noopener');
     closeGive();
-    return;
+  } else if (r.tg){
+    window.open(tgRequest(amount), '_blank', 'noopener');
+    showToast('Открыли Telegram — отправьте готовое сообщение');
+    closeGive();
+  } else {
+    showToast('Для этой суммы нет готовой ссылки — выберите сумму из списка или PayPal');
   }
-  showToast('Этот способ ещё подключаем — совсем скоро');
 });
 
 /* --- открытие и закрытие --- */
@@ -2854,6 +3024,9 @@ function closeGive(){
 }
 
 giveBtn.addEventListener('click', openGive);
+
+guessCurrency();        // сразу по часовому поясу
+refineCurrencyByIp();   // и уточняем по стране
 
 /* ============================== обещание на неделю ============================== */
 
