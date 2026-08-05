@@ -2896,10 +2896,10 @@ function renderStats(fresh){
     statFlags.appendChild(s2);
   }
 
-  statText.textContent = statTotal
-    ? fmtSum(statTotal) + ' ' + plural(statTotal, 'человек', 'человека', 'человек')
-    : '';
-  statsEl.classList.toggle('on', !!statTotal || shown.length > 0);
+  /* Общее число участников копится в statTotal, но в строке не показывается —
+     что с ним делать, решим позже. Здесь видны только страны. */
+  statText.textContent = '';
+  statsEl.classList.toggle('on', shown.length > 0);
 }
 
 /* --- флаг из частиц --- */
