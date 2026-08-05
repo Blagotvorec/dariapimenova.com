@@ -109,6 +109,9 @@
     from{opacity:0;transform:translateY(18px)}
     to{opacity:1;transform:translateY(0)}}
   /* когда буквы улеглись — по имени проходит золотой отлив */
+  /* буквы улеглись — снимаем с них трансформацию, иначе градиент отлива
+     не может проступить сквозь них и имя пропадает */
+  .flag-cap b.shine span{animation:none;opacity:1;transform:none}
   .flag-cap b.shine{
     background:linear-gradient(100deg,#f6f1e4 34%,#fff6df 44%,#ffe6b0 50%,#fff6df 56%,#f6f1e4 66%);
     background-size:280% 100%;
@@ -3111,7 +3114,8 @@ async function showFlag(code){
     flagCtx.globalCompositeOperation = 'source-over';
   }
 
-  let phase = 'in', t0 = performance.now(), outAt = 0, target = null, firstFrame = true;
+  let phase = 'in', t0 = performance.now(), outAt = 0, target = null;
+  let firstFrame = true, frozen = false;
 
   return new Promise(resolve => {
     function draw(now){
@@ -3144,20 +3148,13 @@ async function showFlag(code){
         }
 
       } else if (phase === 'hold'){
+        /* стоп-кадр: рисуем собранный флаг один раз и останавливаем
+           отрисовку совсем. Дальше ждём нажатия в любом месте экрана. */
         flagCtx.clearRect(0, 0, W, H);
         flagCtx.drawImage(pixCv, ox, oy, fw, fh);
-        const sweep = (t * 0.16) % 2.6;
-        if (sweep < 1){
-          const gx = ox - fw * 0.35 + sweep * fw * 1.7;
-          const g = flagCtx.createLinearGradient(gx - fw * 0.3, 0, gx + fw * 0.3, 0);
-          g.addColorStop(0, 'rgba(255,255,255,0)');
-          g.addColorStop(0.5, 'rgba(255,255,255,0.13)');
-          g.addColorStop(1, 'rgba(255,255,255,0)');
-          flagCtx.globalCompositeOperation = 'lighter';
-          flagCtx.fillStyle = g;
-          flagCtx.fillRect(ox, oy, fw, fh);
-          flagCtx.globalCompositeOperation = 'source-over';
-        }
+        frozen = true;
+        flagAnim = null;
+        return;
 
       } else {
         const q = ease(clamp01((now - outAt) / 1300));
@@ -3201,6 +3198,8 @@ async function showFlag(code){
       flagCap.classList.add('leaving');
       setTimeout(() => flagCap.classList.remove('leaving'), 900);
       flagFx.classList.add('out');
+      // выходим из стоп-кадра и снова запускаем отрисовку
+      if (frozen){ frozen = false; flagAnim = requestAnimationFrame(draw); }
     };
 
     flagAnim = requestAnimationFrame(draw);
