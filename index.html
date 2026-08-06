@@ -2,6 +2,23 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'none';
+  base-uri 'self';
+  form-action 'none';
+  object-src 'none';
+  script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net;
+  worker-src 'self' blob:;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src https://fonts.gstatic.com;
+  img-src 'self' data: blob: https://flagcdn.com https://litter.catbox.moe https://files.catbox.moe;
+  media-src 'self' blob: data:;
+  connect-src 'self' https://cdn.jsdelivr.net https://storage.googleapis.com
+              https://abacus.jasoncameron.dev https://jsonblob.com https://ipwho.is
+              https://litterbox.catbox.moe https://litter.catbox.moe https://files.catbox.moe;
+  frame-src https://www.youtube-nocookie.com https://rutube.ru;
+">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ЧЕМ ДУХ НАПОЛНЕН — содержание духа из ваших слов</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1948,6 +1965,13 @@
 </div>
 
 <script>
+/* Защёлка от встраивания: если страницу открыли внутри чужого фрейма,
+   выбираемся наружу. Заголовок frame-ancestors на статичном хостинге
+   не выставить, поэтому проверяем сами. */
+if (window.top !== window.self){
+  try { window.top.location = window.self.location; }
+  catch { document.documentElement.style.display = 'none'; }
+}
 'use strict';
 
 /* ============================== настройки персонажей ==============================
