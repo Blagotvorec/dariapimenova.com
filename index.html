@@ -66,6 +66,9 @@
   /* НЕ ПОКАЗЫВАЕМ НА САЙТЕ: кнопка на согласовании. Снять строку ниже — включится. */
   #creedBtn{display:none !important}
 
+  /* НЕ ПОКАЗЫВАЕМ НА САЙТЕ: кнопка на согласовании. Снять строку ниже — включится. */
+  #creedBtn{display:none !important}
+
   /* Убеждения: маленький крест в правой стойке — еле заметен, но узнаваем */
   #creedBtn{
     position:fixed;right:33px;bottom:146px;z-index:6;
@@ -3995,6 +3998,7 @@ const STATS = {
   cHit:  code => 'https://abacus.jasoncameron.dev/hit/dariapimenova/c_' + code,
   cGet:  code => 'https://abacus.jasoncameron.dev/get/dariapimenova/c_' + code,
   get:   'https://abacus.jasoncameron.dev/get/dariapimenova/visits',
+  journal:'https://jsonblob.com/api/jsonBlob/019fd517-9b95-7198-8b2c-f92762067e92',
   blob:   'https://jsonblob.com/api/jsonBlob/019fd244-54c2-7283-89c2-117ba77f32a2',
   mirror: 'https://jsonblob.com/api/jsonBlob/019fd34d-bbaf-7e2a-ae98-2a5a3a5b6534',
   flag:  code => 'https://flagcdn.com/w320/' + code.toLowerCase() + '.png',
@@ -4123,15 +4127,72 @@ async function readOne(url){
 /* Три источника сводятся по наибольшему счёту, но только внутри одного
    поколения. Если данные почищены вручную, поколение поднимается —
    и старые слепки в браузерах уже не могут вернуть прежние числа. */
+/* ---------- журнал посещений ----------
+   Главная опора статистики: на каждого нового человека дописывается одна
+   запись со страной и временем. Числа не хранятся, а считаются по журналу —
+   выдумать их невозможно. seed — остаток, накопленный до появления журнала.
+   Журнал только растёт: запись короче прочитанной не отправляется. */
+async function readJournal(){
+  try {
+    const res = await fetch(STATS.journal, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const etag = res.headers.get('ETag');
+    const d = await res.json();
+    return {
+      seed: (d && d.seed) || {},
+      log: Array.isArray(d && d.log) ? d.log : [],
+      etag
+    };
+  } catch { return null; }
+}
+
+function countsFromJournal(j){
+  const out = {};
+  for (const k in j.seed){
+    const n = +j.seed[k];
+    if (n > 0) out[k] = { n, t: 0 };
+  }
+  for (const rec of j.log){
+    const k = rec && rec.c;
+    if (!k) continue;
+    if (out[k]) { out[k].n++; if (rec.t && (!out[k].t || rec.t < out[k].t)) out[k].t = rec.t; }
+    else out[k] = { n: 1, t: rec.t || Date.now() };
+  }
+  return out;
+}
+
+async function appendVisit(code){
+  for (let attempt = 0; attempt < 4; attempt++){
+    const j = await readJournal();
+    if (!j) return null;                       // журнал молчит — не пишем
+    const before = j.log.length;
+    j.log.push({ c: code, t: Date.now() });
+    const res = await fetch(STATS.journal, {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' },
+                             j.etag ? { 'If-Match': j.etag } : {}),
+      body: JSON.stringify({ v: 1, seed: j.seed, log: j.log })
+    });
+    if (res.ok) return countsFromJournal(j);
+    if (res.status !== 412) break;             // не конфликт — не повторяем
+    void before;
+  }
+  return null;
+}
+
 async function loadCountries(){
-  const [main, mirror] = await Promise.all([readOne(STATS.blob), readOne(STATS.mirror)]);
+  const [journal, main, mirror] = await Promise.all([
+    readJournal(), readOne(STATS.blob), readOne(STATS.mirror)
+  ]);
   const snap = readSnap();
+  const fromLog = journal ? countsFromJournal(journal) : null;
 
   const gen = Math.max(main.gen || 0, mirror.gen || 0) || 1;
   const parts = [];
   if (main.c && main.gen === gen) parts.push(main.c);
   if (mirror.c && mirror.gen === gen) parts.push(mirror.c);
   if (snap && snap.gen === gen) parts.push(snap.c);
+  if (fromLog) parts.unshift(fromLog);        // журнал — главный источник
   const merged = mergeCountries(...parts);
 
   let healed = null;
@@ -4190,19 +4251,17 @@ async function readCountryCounters(codes){
   return out;
 }
 
+/* Зеркала: повторяют то, что уже посчитано по журналу. */
 async function countMeIn(code){
-  for (let attempt = 0; attempt < 4; attempt++){
+  for (let attempt = 0; attempt < 3; attempt++){
     const { c, gen, etag, ok } = await loadCountries();
     if (!ok) return null;                  // хранилище молчит — ничего не пишем
-    const had = code in c;
-    if (had) c[code].n++;
-    else c[code] = { n: 1, t: Date.now() };
     const res = await putCountries(STATS.blob, gen, c, etag);
     if (res.ok){
       putCountries(STATS.mirror, gen, c, null).catch(() => {});
       bumpCountryCounter(code);              // и в независимые счётчики
       saveSnap(gen, c);
-      return { c, isNew: !had };
+      return { c };
     }
     if (res.status !== 412) break;
   }
@@ -4582,8 +4641,13 @@ async function initStats(){
      при каждой перезагрузке. */
   const lost = readOk && counted && !(counted in c);
   if (REAL_VISIT && readOk && cc && (!counted || lost)){
-    const res = await countMeIn(cc);
-    if (res){ c = res.c; mine = res.isNew; localStorage.setItem('aura_country_counted', cc); }
+    const had = cc in c;
+    const viaLog = await appendVisit(cc);      // запись в журнал — главное
+    if (viaLog){
+      c = viaLog; mine = !had;
+      localStorage.setItem('aura_country_counted', cc);
+      countMeIn(cc);                           // зеркала и счётчики следом
+    }
   }
   statCountries = c;
 
