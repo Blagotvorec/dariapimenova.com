@@ -45,6 +45,80 @@
   }
   .brand{pointer-events:none}
 
+  /* ---------- убеждения: тихая строка ---------- */
+  /* Убеждения: маленький крест в правой стойке — еле заметен, но узнаваем */
+  #creedBtn{
+    position:fixed;right:33px;bottom:146px;z-index:6;
+    width:34px;height:34px;border-radius:50%;
+    appearance:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(145deg,rgba(255,255,255,.11),rgba(255,255,255,.03) 60%);
+    border:1px solid rgba(255,255,255,.17);
+    color:rgba(240,246,255,.7);
+    backdrop-filter:blur(24px) saturate(1.8);
+    -webkit-backdrop-filter:blur(24px) saturate(1.8);
+    box-shadow:0 8px 24px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.24);
+    opacity:.32;
+    transition:transform .38s cubic-bezier(.22,.9,.24,1),opacity .34s,border-color .34s;
+  }
+  #creedBtn svg{width:13px;height:13px;display:block}
+  #creedBtn:hover{opacity:1;transform:scale(1.09);border-color:rgba(226,240,255,.42)}
+  #creedBtn:active{transform:scale(.96)}
+
+  #creedPanel{
+    pointer-events:auto;position:relative;overflow:hidden;
+    width:min(520px,100%);border-radius:34px;
+    background:
+      linear-gradient(24deg,
+        rgba(6,13,26,.94) 0%, rgba(10,22,42,.9) 26%,
+        rgba(18,38,66,.84) 52%, rgba(34,62,96,.78) 74%,
+        rgba(58,92,128,.72) 100%);
+    border:1px solid rgba(255,255,255,.13);
+    backdrop-filter:blur(46px) saturate(2.2);
+    -webkit-backdrop-filter:blur(46px) saturate(2.2);
+    box-shadow:0 46px 130px rgba(0,0,0,.85),
+               inset 0 1px 0 rgba(255,255,255,.34),
+               inset 0 -46px 90px rgba(255,255,255,.04);
+    padding:32px 30px 28px;display:none;will-change:transform;
+  }
+  #creedPanel.visible{display:block}
+  #creedPanel.settle{animation:dropSettle 1.25s cubic-bezier(.22,.9,.24,1)}
+  #creedPanel::after{
+    content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
+    background:conic-gradient(from var(--rim),
+      rgba(255,255,255,.6),rgba(150,196,255,.5),rgba(90,150,240,.3),
+      rgba(180,230,255,.28),rgba(255,255,255,.06),rgba(255,255,255,.6));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    mask-composite:exclude;
+    animation:rimFlow 19s linear infinite;pointer-events:none;z-index:4;
+  }
+  #creedPanel::before{
+    content:'';position:absolute;left:8%;right:8%;top:0;height:50%;
+    background:radial-gradient(120% 100% at 50% 0,rgba(255,255,255,.2),rgba(255,255,255,0) 62%);
+    pointer-events:none;z-index:3;border-radius:inherit;
+  }
+  .creed-top em{
+    display:block;font-style:normal;
+    font-size:9.5px;font-weight:300;letter-spacing:.26em;text-transform:uppercase;
+    color:rgba(176,214,255,.5);
+  }
+  #creedPanel h2{
+    margin-top:7px;
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:25px;font-weight:500;letter-spacing:.03em;color:#f4f9ff;
+  }
+  #creedPanel p{
+    margin-top:16px;
+    font-size:13px;font-weight:300;line-height:1.72;letter-spacing:.01em;
+    color:rgba(238,245,255,.72);
+  }
+  #creedPanel p + p{margin-top:13px}
+  .creed-rule{
+    height:1px;margin:22px auto 0;width:150px;
+    background:linear-gradient(90deg,rgba(150,196,255,0),rgba(178,214,255,.7),rgba(150,196,255,0));
+  }
+
   /* ---------- «Наполнить» ---------- */
   /* «Наполнить»: тот же материал, что у «Дать» */
   #fillBtn{
@@ -1534,6 +1608,7 @@
     .toggle button{font-size:10.5px;padding:8px 16px;letter-spacing:.12em}
     #fab{width:40px;height:40px;right:14px;bottom:72px}
     #shareBtn{width:36px;height:36px;right:16px;bottom:122px}
+    #creedBtn{width:30px;height:30px;right:19px;bottom:168px}
     #giveBtn{top:16px;right:14px;padding:8px 15px;font-size:10px;letter-spacing:.18em}
     #givePanel{padding:26px 22px 22px;border-radius:30px}
     #givePanel h2{font-size:21px}
@@ -1567,6 +1642,33 @@
   <em>содержание духа из ваших слов</em>
   <button id="fillBtn" aria-label="Наполнить"><span>Наполнить</span></button>
   <div class="stats" id="stats"><span class="flags" id="statFlags"></span><span id="statText"></span></div>
+</div>
+
+<div class="panel-wrap" id="creedWrap">
+  <div id="creedPanel">
+    <div class="spectral" aria-hidden="true">
+      <i class="cols"></i><i class="bright"></i><i class="scratch"></i>
+      <i class="prism"></i><i class="veil"></i>
+    </div>
+    <div class="lesson-in">
+      <div class="creed-top">
+        <em>любовь Христа · культура и приверженность</em>
+        <h2>Наши убеждения</h2>
+      </div>
+      <p>В организации «Любовь Христа» каждый человек в команде — важная и ценная
+        часть нашей миссии и служения.
+        При выборе на любое место мы смотрим на готовность служить и на способность
+        человека нести нашу культуру и христианские убеждения. Главное в любой роли —
+        являть Иисуса тем, как мы живём и как поступаем.</p>
+      <p>Объединяясь вокруг миссии, мы понимаем: единство не означает единообразия.
+        Наше призвание слишком велико, а миссия слишком важна, чтобы не укреплять
+        команду людьми из самых разных слоёв. Мы верим, что разные взгляды — независимо
+        от происхождения, жизненного опыта, возраста и пола — обогащают нашу
+        способность рассказывать миру историю Иисуса и помогать каждому человеку
+        и повсюду познать подлинного Христа.</p>
+      <div class="creed-rule"></div>
+    </div>
+  </div>
 </div>
 
 <div class="panel-wrap" id="lessonWrap">
@@ -1686,6 +1788,13 @@
   <button data-g="m" class="active">Мужчина</button>
   <button data-g="f">Женщина</button>
 </div>
+
+<button id="creedBtn" aria-label="Наши убеждения" title="Наши убеждения">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+       stroke-linecap="round" aria-hidden="true">
+    <path d="M12 4.5v15M7.5 9.2h9"/>
+  </svg>
+</button>
 
 <button id="shareBtn" aria-label="Поделиться облаком" title="Поделиться облаком">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -3692,6 +3801,46 @@ function closeLesson(keepScrim){
 
 fillBtn.addEventListener('click', openLesson);
 
+/* ---------- убеждения ---------- */
+const creedBtn = document.getElementById('creedBtn');
+const creedPanel = document.getElementById('creedPanel');
+let creedOpen = false;
+
+function creedMorph(open){
+  const pr = creedPanel.getBoundingClientRect();
+  const br = creedBtn.getBoundingClientRect();
+  const dx = (br.left + br.width / 2) - (pr.left + pr.width / 2);
+  const dy = (br.top + br.height / 2) - (pr.top + pr.height / 2);
+  const sc = Math.max(0.06, br.width / pr.width);
+  const small = { transform: `translate(${dx}px, ${dy}px) scale(${sc})`, opacity: 0.15 };
+  const full  = { transform: 'translate(0, 0) scale(1)', opacity: 1 };
+  return creedPanel.animate(open ? [small, full] : [full, small],
+    { duration: open ? 640 : 500, easing: EASE });
+}
+
+function openCreed(){
+  if (creedOpen || panelOpen) return;
+  closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask();
+  creedOpen = true;
+  creedPanel.classList.add('visible');
+  scrim.classList.add('on');
+  creedPanel.classList.remove('settle');
+  void creedPanel.offsetWidth;
+  creedPanel.classList.add('settle');
+  creedMorph(true);
+}
+
+function closeCreed(){
+  if (!creedOpen) return;
+  creedOpen = false;
+  scrim.classList.remove('on');
+  creedMorph(false).onfinish = () => {
+    if (!creedOpen) creedPanel.classList.remove('visible', 'settle');
+  };
+}
+
+creedBtn.addEventListener('click', openCreed);
+
 /* ---------- окно курса ---------- */
 function renderCourse(){
   courseList.innerHTML = '';
@@ -3816,6 +3965,8 @@ document.getElementById('seriesBtn').addEventListener('click', () => {
    появляется новая страна (через ETag, чтобы двое не затёрли друг друга). */
 const STATS = {
   hit:   'https://abacus.jasoncameron.dev/hit/dariapimenova/visits',
+  cHit:  code => 'https://abacus.jasoncameron.dev/hit/dariapimenova/c_' + code,
+  cGet:  code => 'https://abacus.jasoncameron.dev/get/dariapimenova/c_' + code,
   get:   'https://abacus.jasoncameron.dev/get/dariapimenova/visits',
   blob:   'https://jsonblob.com/api/jsonBlob/019fd244-54c2-7283-89c2-117ba77f32a2',
   mirror: 'https://jsonblob.com/api/jsonBlob/019fd34d-bbaf-7e2a-ae98-2a5a3a5b6534',
@@ -3968,12 +4119,50 @@ async function loadCountries(){
   if (healed) console.info('Статистика восстановлена (' + healed + ')');
 
   const ok = !!(main.c || mirror.c);       // хоть один источник ответил
+
+  /* Если файловые хранилища потеряли страны, которые помнит браузер,
+     добираем числа из независимых счётчиков и возвращаем их на место. */
+  if (ok && snap){
+    const missing = Object.keys(snap.c).filter(k => !merged[k]);
+    if (missing.length){
+      const rescued = await readCountryCounters(missing);
+      for (const k in rescued){
+        merged[k] = { n: Math.max(rescued[k].n, snap.c[k].n), t: snap.c[k].t || Date.now() };
+      }
+      if (Object.keys(rescued).length){
+        console.info('Страны восстановлены из счётчиков: ' + Object.keys(rescued).join(', '));
+        putCountries(STATS.blob, gen, merged, null).catch(() => {});
+        putCountries(STATS.mirror, gen, merged, null).catch(() => {});
+      }
+    }
+  }
+
   if (ok) saveSnap(gen, merged);
   return { c: merged, gen, etag: main.etag, healed, ok };
 }
 
 /* Один человек — один голос. При одновременной записи двоих сервер вернёт 412,
    тогда перечитываем свежие данные и прибавляем снова: голос не теряется. */
+/* Третья опора на другом сервисе: атомарный счётчик на страну.
+   Его нельзя затереть записью — он только растёт. Если оба файловых
+   хранилища опустеют, цифры восстанавливаются отсюда. */
+async function bumpCountryCounter(code){
+  try { await fetch(STATS.cHit(code), { cache: 'no-store' }); } catch {}
+}
+
+async function readCountryCounters(codes){
+  const out = {};
+  await Promise.all(codes.map(async code => {
+    try {
+      const r = await fetch(STATS.cGet(code), { cache: 'no-store' });
+      if (!r.ok) return;
+      const v = (await r.json()).value;
+      if (typeof v === 'number' && v > 0) out[code] = { n: v, t: 0 };
+    } catch {}
+  }));
+  return out;
+}
+
 async function countMeIn(code){
   for (let attempt = 0; attempt < 4; attempt++){
     const { c, gen, etag, ok } = await loadCountries();
@@ -3984,6 +4173,7 @@ async function countMeIn(code){
     const res = await putCountries(STATS.blob, gen, c, etag);
     if (res.ok){
       putCountries(STATS.mirror, gen, c, null).catch(() => {});
+      bumpCountryCounter(code);              // и в независимые счётчики
       saveSnap(gen, c);
       return { c, isNew: !had };
     }
@@ -4005,9 +4195,10 @@ async function bumpVisits(){
 
 /* --- строка статистики --- */
 function renderStats(fresh){
-  const seen = seenFlags();
+  /* Показываем все страны, что есть в хранилище. Раньше строка
+     фильтровалась по «увиденным этим браузером», и после любой правки
+     данных человек видел пустоту, хотя цифры были на месте. */
   const codes = Object.keys(statCountries)
-    .filter(c => c === fresh || seen.has(c))
     .sort((a, b) => (statCountries[b].n - statCountries[a].n) ||
                     (statCountries[b].t - statCountries[a].t));
   const shown = codes.slice(0, STATS.maxFlagsShown);
@@ -4986,8 +5177,8 @@ function closePanel(){
   };
 }
 
-fab.addEventListener('click', () => { closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask(); openPanel(); });
-scrim.addEventListener('click', () => { closePanel(); closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask(); });
+fab.addEventListener('click', () => { closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask(); closeCreed(); openPanel(); });
+scrim.addEventListener('click', () => { closePanel(); closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask(); closeCreed(); });
 window.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   closePanel();
@@ -4996,6 +5187,7 @@ window.addEventListener('keydown', e => {
   closeLesson();
   closeCourse();
   closeTask();
+  closeCreed();
 });
 
 saveBtn.addEventListener('click', () => {
