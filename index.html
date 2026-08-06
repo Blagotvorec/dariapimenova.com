@@ -3967,15 +3967,17 @@ async function loadCountries(){
   }
   if (healed) console.info('Статистика восстановлена (' + healed + ')');
 
-  saveSnap(gen, merged);
-  return { c: merged, gen, etag: main.etag, healed };
+  const ok = !!(main.c || mirror.c);       // хоть один источник ответил
+  if (ok) saveSnap(gen, merged);
+  return { c: merged, gen, etag: main.etag, healed, ok };
 }
 
 /* Один человек — один голос. При одновременной записи двоих сервер вернёт 412,
    тогда перечитываем свежие данные и прибавляем снова: голос не теряется. */
 async function countMeIn(code){
   for (let attempt = 0; attempt < 4; attempt++){
-    const { c, gen, etag } = await loadCountries();
+    const { c, gen, etag, ok } = await loadCountries();
+    if (!ok) return null;                  // хранилище молчит — ничего не пишем
     const had = code in c;
     if (had) c[code].n++;
     else c[code] = { n: 1, t: Date.now() };
@@ -4351,14 +4353,17 @@ async function initStats(){
   const [cc, total] = await Promise.all([geoCountry(), bumpVisits()]);
   statTotal = total;
 
-  let { c } = await loadCountries().catch(() => ({ c: {} }));
+  let { c, ok: readOk } = await loadCountries().catch(() => ({ c: {}, ok: false }));
   let mine = false;
   /* Один человек — один голос: браузер помнит, что уже отмечен.
      Но если его страны на сервере нет (данные терялись), голос возвращаем —
      иначе человек навсегда выпадает из статистики. */
   const counted = localStorage.getItem('aura_country_counted');
-  const lost = counted && !(counted in c);
-  if (REAL_VISIT && cc && (!counted || lost)){
+  /* Лечим только если хранилище действительно ответило: иначе неудачное
+     чтение выглядит как «голос пропал», и человек считается заново
+     при каждой перезагрузке. */
+  const lost = readOk && counted && !(counted in c);
+  if (REAL_VISIT && readOk && cc && (!counted || lost)){
     const res = await countMeIn(cc);
     if (res){ c = res.c; mine = res.isNew; localStorage.setItem('aura_country_counted', cc); }
   }
