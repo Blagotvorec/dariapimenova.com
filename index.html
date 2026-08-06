@@ -46,49 +46,63 @@
   .brand{pointer-events:none}
 
   /* ---------- «Наполнить» ---------- */
+  /* «Наполнить»: тот же материал, что у «Дать» */
   #fillBtn{
     pointer-events:auto;
     display:inline-flex;align-items:center;gap:7px;
-    margin-top:11px;padding:8px 16px;border-radius:999px;
-    appearance:none;cursor:pointer;overflow:hidden;position:relative;
+    margin-top:12px;padding:8px 26px;border-radius:11px;
+    appearance:none;cursor:pointer;position:relative;
     font-family:var(--font);font-size:10px;font-weight:500;
     letter-spacing:.2em;text-transform:uppercase;
-    color:rgba(247,244,236,.9);
-    background:rgba(30,34,44,.4);
-    border:1px solid rgba(190,205,255,.28);
-    backdrop-filter:blur(20px) saturate(1.9);
-    -webkit-backdrop-filter:blur(20px) saturate(1.9);
-    box-shadow:0 8px 26px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.3);
-    transition:transform .45s cubic-bezier(.22,.9,.24,1),border-color .4s;
-  }
-  #fillBtn span{position:relative;z-index:2}
-  #fillBtn::before{
-    content:'';position:absolute;inset:-60%;z-index:0;
+    color:rgba(250,252,255,.96);
+    text-shadow:0 1px 3px rgba(8,16,32,.55);
     background:
-      radial-gradient(circle at 32% 42%,rgba(150,190,255,.5),transparent 55%),
-      radial-gradient(circle at 68% 58%,rgba(196,168,255,.42),transparent 55%);
-    filter:blur(12px);
-    animation:fillFlow 13s ease-in-out infinite;
+      radial-gradient(92% 170% at 72% -46%,
+        rgba(255,206,132,.44) 0%, rgba(255,232,192,.15) 40%, rgba(255,255,255,0) 72%),
+      radial-gradient(84% 160% at 2% 146%,
+        rgba(156,200,255,.42) 0%, rgba(206,228,255,.13) 46%, rgba(255,255,255,0) 80%),
+      linear-gradient(180deg,
+        rgba(240,247,255,.28) 0%, rgba(206,224,248,.17) 52%, rgba(168,192,226,.13) 100%);
+    border:1px solid rgba(226,240,255,.44);
+    backdrop-filter:blur(24px) saturate(1.75);
+    -webkit-backdrop-filter:blur(24px) saturate(1.75);
+    box-shadow:
+      0 -8px 26px rgba(255,198,118,.36),
+      0 -3px 12px rgba(255,214,152,.3),
+      -15px 9px 32px rgba(138,188,255,.36),
+      -5px 2px 16px rgba(160,204,255,.26),
+      0 20px 34px rgba(6,10,20,.5),
+      0 8px 16px rgba(6,10,20,.34),
+      inset 0 1px 0 rgba(255,255,255,.68),
+      inset 0 -1px 0 rgba(100,130,175,.24);
+    transition:transform .42s cubic-bezier(.22,.9,.24,1),
+               box-shadow .42s, border-color .42s;
   }
-  #fillBtn::after{
-    content:'';position:absolute;inset:0;z-index:1;
-    background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.32) 50%,transparent 60%);
-    transform:translateX(-120%);
-    animation:giveSheen 8s ease-in-out infinite 1.5s;
+  #fillBtn:hover{
+    transform:translateY(-1px);
+    border-color:rgba(236,246,255,.62);
+    box-shadow:
+      0 -10px 30px rgba(255,198,118,.48),
+      0 -3px 14px rgba(255,214,152,.38),
+      -17px 10px 38px rgba(138,188,255,.48),
+      -6px 2px 20px rgba(160,204,255,.34),
+      0 24px 40px rgba(6,10,20,.55),
+      0 9px 18px rgba(6,10,20,.36),
+      inset 0 1px 0 rgba(255,255,255,.82),
+      inset 0 -1px 0 rgba(100,130,175,.24);
   }
-  #fillBtn:hover{transform:scale(1.05);border-color:rgba(190,205,255,.65)}
-  #fillBtn:active{transform:scale(.97)}
-  @keyframes fillFlow{
-    0%,100%{transform:translate(-5%,-4%) scale(1)}
-    50%{transform:translate(9%,7%) scale(1.28)}
-  }
+  #fillBtn:active{transform:translateY(0) scale(.99)}
 
   #lessonPanel{
     pointer-events:auto;
     position:relative;overflow:hidden;
     width:min(560px,100%);
     border-radius:34px;
-    background:rgba(14,15,20,.5);
+    background:
+      linear-gradient(24deg,
+        rgba(6,13,26,.94) 0%, rgba(10,22,42,.9) 26%,
+        rgba(18,38,66,.84) 52%, rgba(34,62,96,.78) 74%,
+        rgba(58,92,128,.72) 100%);
     border:1px solid rgba(255,255,255,.13);
     backdrop-filter:blur(46px) saturate(2.2);
     -webkit-backdrop-filter:blur(46px) saturate(2.2);
@@ -212,15 +226,15 @@
     display:none;margin-top:12px;width:100%;
     appearance:none;cursor:pointer;
     background:rgba(255,255,255,.07);
-    border:1px solid rgba(255,224,178,.34);
-    color:rgba(255,236,200,.9);
+    border:1px solid rgba(160,205,255,.36);
+    color:rgba(214,234,255,.92);
     font-family:var(--font);font-size:11.5px;font-weight:500;
     letter-spacing:.2em;text-transform:uppercase;
     padding:15px;border-radius:15px;
     transition:background .3s,border-color .3s,transform .3s cubic-bezier(.34,1.4,.4,1);
   }
   #lessonDone.on{display:block}
-  #lessonDone:hover{background:rgba(255,224,178,.14);border-color:rgba(255,224,178,.6)}
+  #lessonDone:hover{background:rgba(160,205,255,.14);border-color:rgba(160,205,255,.6)}
   #lessonDone:active{transform:scale(.985)}
   #lessonPanel .lesson-in{max-height:80vh;overflow-y:auto;scrollbar-width:none}
   #lessonPanel .lesson-in::-webkit-scrollbar{display:none}
@@ -231,7 +245,11 @@
     position:relative;overflow:hidden;
     width:min(520px,100%);
     border-radius:34px;
-    background:rgba(18,15,12,.5);
+    background:
+      linear-gradient(24deg,
+        rgba(6,13,26,.94) 0%, rgba(10,22,42,.9) 26%,
+        rgba(18,38,66,.84) 52%, rgba(34,62,96,.78) 74%,
+        rgba(58,92,128,.72) 100%);
     border:1px solid rgba(255,255,255,.13);
     backdrop-filter:blur(46px) saturate(2.2);
     -webkit-backdrop-filter:blur(46px) saturate(2.2);
@@ -246,8 +264,8 @@
   #coursePanel::after{
     content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
     background:conic-gradient(from var(--rim),
-      rgba(255,255,255,.6),rgba(255,214,150,.55),rgba(255,170,120,.34),
-      rgba(255,236,190,.28),rgba(255,255,255,.05),rgba(255,255,255,.6));
+      rgba(255,255,255,.6),rgba(150,196,255,.5),rgba(90,150,240,.3),
+      rgba(180,230,255,.28),rgba(255,255,255,.06),rgba(255,255,255,.6));
     -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
     -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
     mask-composite:exclude;
@@ -283,7 +301,7 @@
   .course-top em{
     display:block;font-style:normal;
     font-size:9.5px;font-weight:300;letter-spacing:.28em;text-transform:uppercase;
-    color:rgba(255,220,170,.45);
+    color:rgba(176,214,255,.5);
   }
   #coursePanel h2{
     margin-top:7px;
@@ -309,7 +327,7 @@
     animation:cardWave 9s ease-in-out infinite;
   }
   @keyframes cardWave{0%,100%{background-position:130% 0}55%{background-position:-30% 0}}
-  .lcard:hover{background:rgba(255,255,255,.1);border-color:rgba(255,214,150,.4)}
+  .lcard:hover{background:rgba(255,255,255,.1);border-color:rgba(160,205,255,.42)}
   .lcard:active{transform:scale(.985)}
   .lcard .num{
     flex:none;width:26px;height:26px;border-radius:9px;
@@ -317,7 +335,7 @@
     font-size:11px;font-weight:600;letter-spacing:.02em;
     background:linear-gradient(140deg,rgba(255,255,255,.16),rgba(255,255,255,.04));
     border:1px solid rgba(255,255,255,.14);
-    color:rgba(255,232,190,.9);
+    color:rgba(206,230,255,.92);
   }
   .lcard .nm{
     flex:1;min-width:0;
@@ -327,8 +345,8 @@
     flex:none;display:inline-flex;align-items:center;gap:5px;
     padding:7px 11px;border-radius:999px;
     font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
-    background:linear-gradient(135deg,#ffd98a,#ffb86b);
-    color:#3a2a10;
+    background:linear-gradient(135deg,#dceaff,#b9d3f5);
+    color:#16233a;
     box-shadow:0 6px 18px rgba(255,180,90,.22),inset 0 1px 0 rgba(255,255,255,.55);
   }
   .lcard .badge svg{width:10px;height:10px}
@@ -442,7 +460,11 @@
     position:relative;overflow:hidden;
     width:min(500px,100%);
     border-radius:36px;
-    background:rgba(15,16,22,.46);
+    background:
+      linear-gradient(24deg,
+        rgba(6,13,26,.94) 0%, rgba(10,22,42,.9) 26%,
+        rgba(18,38,66,.84) 52%, rgba(34,62,96,.78) 74%,
+        rgba(58,92,128,.72) 100%);
     backdrop-filter:blur(50px) saturate(2.3);
     -webkit-backdrop-filter:blur(50px) saturate(2.3);
     border:1px solid rgba(255,255,255,.1);
@@ -468,8 +490,8 @@
   #taskPanel::after{
     content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
     background:conic-gradient(from var(--rim),
-      rgba(255,255,255,.65),rgba(190,215,255,.5),rgba(214,186,255,.34),
-      rgba(255,236,190,.3),rgba(255,255,255,.06),rgba(255,255,255,.65));
+      rgba(255,255,255,.65),rgba(150,196,255,.52),rgba(90,150,240,.32),
+      rgba(180,230,255,.3),rgba(255,255,255,.06),rgba(255,255,255,.65));
     -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
     -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
     mask-composite:exclude;
@@ -504,7 +526,7 @@
   }
   .task-card h3{
     font-size:10px;font-weight:400;letter-spacing:.2em;text-transform:uppercase;
-    color:rgba(255,224,178,.6);
+    color:rgba(176,214,255,.62);
   }
   .task-card ul{margin-top:12px;display:flex;flex-direction:column;gap:11px}
   .task-card li{
@@ -515,8 +537,8 @@
     flex:none;width:19px;height:19px;margin-top:1px;border-radius:7px;
     display:flex;align-items:center;justify-content:center;font-style:normal;
     font-size:10px;font-weight:600;
-    background:linear-gradient(140deg,rgba(255,236,190,.9),rgba(255,200,140,.75));
-    color:#3a2a10;
+    background:linear-gradient(140deg,rgba(226,240,255,.92),rgba(178,210,248,.8));
+    color:#16233a;
   }
   .task-card li b{font-weight:500;color:rgba(250,248,242,.95)}
   .task-wait{
@@ -634,7 +656,7 @@
   /* тонкая золотая черта раскрывается из центра */
   .flag-cap .rule{
     display:block;height:1px;margin:18px auto 0;width:0;
-    background:linear-gradient(90deg,rgba(230,207,154,0),rgba(230,207,154,.85),rgba(230,207,154,0));
+    background:linear-gradient(90deg,rgba(150,196,255,0),rgba(178,214,255,.85),rgba(150,196,255,0));
   }
   .flag-cap.on .rule{animation:capRule 1.6s cubic-bezier(.16,1,.3,1) .5s forwards}
   @keyframes capRule{to{width:190px}}
@@ -668,7 +690,11 @@
     pointer-events:auto;
     position:relative;overflow:hidden;
     width:min(440px,100%);
-    background:linear-gradient(165deg,rgba(255,255,255,.10),rgba(255,255,255,.03) 28%,rgba(14,14,17,.7) 100%);
+    background:
+      linear-gradient(24deg,
+        rgba(6,13,26,.94) 0%, rgba(10,22,42,.9) 26%,
+        rgba(18,38,66,.84) 52%, rgba(34,62,96,.78) 74%,
+        rgba(58,92,128,.72) 100%);
     border:1px solid rgba(230,207,154,.28);
     border-radius:var(--panel-r);
     backdrop-filter:blur(42px) saturate(1.7);
@@ -685,7 +711,7 @@
   #promisePanel h2{
     font-family:'Playfair Display',Georgia,serif;
     font-size:20px;font-weight:500;letter-spacing:.05em;
-    color:var(--gold);
+    color:#cfe2ff;
   }
   #promisePanel .from{
     margin-top:7px;
@@ -703,11 +729,11 @@
   #promiseLink{
     display:inline-block;margin-top:14px;
     font-size:11px;font-weight:300;letter-spacing:.12em;text-transform:uppercase;
-    color:rgba(230,207,154,.65);text-decoration:none;
-    border-bottom:1px solid rgba(230,207,154,.25);
+    color:rgba(176,214,255,.7);text-decoration:none;
+    border-bottom:1px solid rgba(150,196,255,.28);
     transition:color .3s,border-color .3s;
   }
-  #promiseLink:hover{color:var(--gold);border-color:rgba(230,207,154,.6)}
+  #promiseLink:hover{color:#dcebff;border-color:rgba(160,205,255,.6)}
   .promise-check{
     display:flex;align-items:flex-start;gap:12px;
     margin-top:24px;cursor:pointer;user-select:none;
@@ -715,14 +741,14 @@
   .promise-check input{position:absolute;opacity:0;pointer-events:none}
   .promise-check .box{
     flex:none;width:20px;height:20px;margin-top:1px;border-radius:7px;
-    border:1px solid rgba(230,207,154,.5);
-    background:rgba(230,207,154,.06);
+    border:1px solid rgba(150,196,255,.5);
+    background:rgba(150,196,255,.07);
     display:flex;align-items:center;justify-content:center;
     transition:background .25s,border-color .25s;
   }
   .promise-check .box svg{width:11px;height:11px;opacity:0;transform:scale(.5);
     transition:opacity .25s,transform .25s;color:#0a0a0a}
-  .promise-check input:checked + .box{background:var(--gold);border-color:var(--gold)}
+  .promise-check input:checked + .box{background:#cfe2ff;border-color:#cfe2ff}
   .promise-check input:checked + .box svg{opacity:1;transform:scale(1)}
   .promise-check span{
     font-size:13px;font-weight:300;line-height:1.55;letter-spacing:.02em;
@@ -731,7 +757,7 @@
   #promiseAccept{
     margin-top:22px;width:100%;
     appearance:none;border:0;cursor:pointer;
-    background:var(--gold);color:#171307;
+    background:linear-gradient(135deg,#e6f0ff,#c2d9f8);color:#14203a;
     font-family:var(--font);font-size:13px;font-weight:700;
     letter-spacing:.24em;text-transform:uppercase;
     padding:17px;border-radius:16px;
@@ -739,11 +765,11 @@
     transition:opacity .4s,transform .4s cubic-bezier(.22,.9,.24,1),box-shadow .3s;
   }
   #promiseAccept.on{opacity:1;transform:translateY(0);pointer-events:auto}
-  #promiseAccept:hover{box-shadow:0 12px 40px rgba(230,207,154,.24)}
+  #promiseAccept:hover{box-shadow:0 12px 40px rgba(140,185,255,.3)}
   #promiseDone{
     margin-top:20px;text-align:center;display:none;
     font-size:12px;font-weight:300;letter-spacing:.12em;text-transform:uppercase;
-    color:rgba(230,207,154,.75);
+    color:rgba(176,214,255,.78);
   }
 
   /* ---------- скрытый центр облака ---------- */
@@ -905,69 +931,81 @@
   /* ---------- «Дать»: жидкость ---------- */
   @property --rim{syntax:'<angle>';initial-value:0deg;inherits:false}
 
+  /* Кнопка снята с референса: надувная подушка в пазу металлической панели.
+     Цвета взяты замером с кадров видео. */
+  /* Primary Action с референса: матовое стекло с тёплым свечением
+     по верхней кромке и холодным подсветом снизу. */
+  /* Primary Action с референса: матовое стекло, свечение выходит наружу —
+     тёплое от верхней кромки, холодное слева, мягкая тень со сдвигом вниз. */
+  /* Primary Action: прозрачное матовое стекло, мягкие рассеянные тени,
+     свечение едва намечено. Кнопка не должна тянуть внимание на себя. */
+  /* Primary Action: плоская широкая пилюля матового стекла.
+     Тёплый ореол наливается сверху справа, холодный — снизу слева,
+     под кнопкой мягкая рассеянная тень со сдвигом вниз. */
   #giveBtn{
-    position:fixed;top:30px;right:32px;z-index:7;
+    position:fixed;top:27px;right:30px;z-index:7;
     appearance:none;cursor:pointer;
-    padding:10px 19px;border-radius:999px;
-    font-family:var(--font);font-size:11px;font-weight:500;
-    letter-spacing:.22em;text-transform:uppercase;
-    color:rgba(252,246,232,.95);
-    background:linear-gradient(150deg,rgba(255,255,255,.16),rgba(255,255,255,.05) 42%,rgba(40,32,20,.32));
-    border:1px solid rgba(255,255,255,.26);
-    backdrop-filter:blur(26px) saturate(2.1);
-    -webkit-backdrop-filter:blur(26px) saturate(2.1);
-    /* толща стекла: свет по верхней кромке, тень по нижней, боковое преломление */
-    box-shadow:0 10px 34px rgba(0,0,0,.5),
-               inset 0 1.4px 0 rgba(255,255,255,.6),
-               inset 0 -1.2px 0 rgba(0,0,0,.3),
-               inset 10px 0 22px rgba(255,255,255,.07),
-               inset -10px 0 22px rgba(0,0,0,.18);
-    overflow:hidden;
-    transition:transform .45s cubic-bezier(.22,.9,.24,1),
-               box-shadow .45s,border-color .45s;
-  }
-  #giveBtn span{position:relative;z-index:2;display:flex;align-items:center;gap:7px}
-  #giveBtn svg{width:15px;height:15px;flex:none;opacity:.95;margin-top:-1px}
-  #giveBtn::before{            /* тёплая жидкость внутри кнопки */
-    content:'';position:absolute;inset:-70%;z-index:0;
+    padding:8px 34px;border-radius:11px;
     background:
-      radial-gradient(circle at 28% 38%,rgba(255,222,158,.62),transparent 54%),
-      radial-gradient(circle at 72% 62%,rgba(246,176,150,.5),transparent 54%),
-      radial-gradient(circle at 52% 84%,rgba(214,186,255,.3),transparent 56%);
-    filter:blur(13px);
-    animation:giveFlow 11s ease-in-out infinite;
+      radial-gradient(92% 170% at 72% -46%,
+        rgba(255,206,132,.44) 0%, rgba(255,232,192,.15) 40%, rgba(255,255,255,0) 72%),
+      radial-gradient(84% 160% at 2% 146%,
+        rgba(156,200,255,.42) 0%, rgba(206,228,255,.13) 46%, rgba(255,255,255,0) 80%),
+      linear-gradient(180deg,
+        rgba(240,247,255,.28) 0%, rgba(206,224,248,.17) 52%, rgba(168,192,226,.13) 100%);
+    border:1px solid rgba(226,240,255,.44);
+    backdrop-filter:blur(24px) saturate(1.75);
+    -webkit-backdrop-filter:blur(24px) saturate(1.75);
+    box-shadow:
+      /* тёплый свет уходит вверх за кромку */
+      0 -8px 26px rgba(255,198,118,.36),
+      0 -3px 12px rgba(255,214,152,.3),
+      /* холодный — влево и вниз */
+      -15px 9px 32px rgba(138,188,255,.36),
+      -5px 2px 16px rgba(160,204,255,.26),
+      /* мягкая рассеянная тень под кнопкой */
+      0 20px 34px rgba(6,10,20,.5),
+      0 8px 16px rgba(6,10,20,.34),
+      inset 0 1px 0 rgba(255,255,255,.68),
+      inset 0 -1px 0 rgba(100,130,175,.24);
+    transition:transform .42s cubic-bezier(.22,.9,.24,1),
+               box-shadow .42s, border-color .42s;
   }
-  #giveBtn::after{             /* блик, пробегающий по кнопке */
-    content:'';position:absolute;inset:0;z-index:1;
-    background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.34) 50%,transparent 60%);
-    transform:translateX(-120%);
-    animation:giveSheen 7s ease-in-out infinite;
+  #giveBtn .face{
+    position:relative;z-index:2;display:flex;align-items:center;gap:7px;
+    color:rgba(250,252,255,.96);
+    text-shadow:0 1px 3px rgba(8,16,32,.55);
+  }
+  #giveBtn .face svg{width:14px;height:14px;flex:none;opacity:.88}
+  #giveBtn .face i{
+    font-style:normal;font-family:var(--font);
+    font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
   }
   #giveBtn:hover{
-    transform:scale(1.055);
-    border-color:rgba(255,232,190,.75);
-    box-shadow:0 14px 44px rgba(0,0,0,.55),
-               inset 0 1.6px 0 rgba(255,255,255,.8),
-               inset 0 -1.2px 0 rgba(0,0,0,.3),
-               inset 12px 0 26px rgba(255,255,255,.11),
-               inset -12px 0 26px rgba(0,0,0,.2);
+    transform:translateY(-1px);
+    border-color:rgba(236,246,255,.62);
+    box-shadow:
+      0 -10px 30px rgba(255,198,118,.48),
+      0 -3px 14px rgba(255,214,152,.38),
+      -17px 10px 38px rgba(138,188,255,.48),
+      -6px 2px 20px rgba(160,204,255,.34),
+      0 24px 40px rgba(6,10,20,.55),
+      0 9px 18px rgba(6,10,20,.36),
+      inset 0 1px 0 rgba(255,255,255,.82),
+      inset 0 -1px 0 rgba(100,130,175,.24);
   }
-  #giveBtn:active{transform:scale(.965)}
-  @keyframes giveFlow{
-    0%,100%{transform:translate(-6%,-4%) scale(1)}
-    50%{transform:translate(10%,8%) scale(1.25)}
-  }
-  @keyframes giveSheen{
-    0%,72%{transform:translateX(-120%)}
-    100%{transform:translateX(120%)}
-  }
+  #giveBtn:active{transform:translateY(0) scale(.99)}
 
   #givePanel{
     pointer-events:auto;
     position:relative;overflow:hidden;
     width:min(460px,100%);
     border-radius:34px;
-    background:rgba(16,14,18,.52);
+    background:
+      linear-gradient(24deg,
+        rgba(6,13,26,.94) 0%, rgba(10,22,42,.9) 26%,
+        rgba(18,38,66,.84) 52%, rgba(34,62,96,.78) 74%,
+        rgba(58,92,128,.72) 100%);
     border:1px solid rgba(255,255,255,.14);
     backdrop-filter:blur(44px) saturate(2.1);
     -webkit-backdrop-filter:blur(44px) saturate(2.1);
@@ -983,8 +1021,8 @@
   #givePanel::after{
     content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
     background:conic-gradient(from var(--rim),
-      rgba(255,255,255,.55),rgba(230,207,154,.5),rgba(232,169,160,.3),
-      rgba(154,230,216,.28),rgba(255,255,255,.06),rgba(255,255,255,.55));
+      rgba(255,255,255,.6),rgba(150,196,255,.5),rgba(90,150,240,.3),
+      rgba(180,230,255,.28),rgba(255,255,255,.06),rgba(255,255,255,.6));
     -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
     -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
     mask-composite:exclude;
@@ -992,6 +1030,87 @@
     pointer-events:none;z-index:3;
   }
   @keyframes rimFlow{to{--rim:360deg}}
+
+  /* Спектральный свет: расфокусированные почти вертикальные столбы,
+     яркое скопление справа и пятно дисперсии слева от центра.
+     Композиция снята с референса, движения нет. */
+  .spectral{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:inherit}
+  .spectral i{position:absolute;display:block}
+
+  /* световые столбы, наклонённые вправо примерно на 11 градусов */
+  .spectral .cols{
+    inset:-14% -18%;
+    background:linear-gradient(101deg,
+      rgba(255,255,255,0) 0%,
+      rgba(120,168,214,.10) 27%, rgba(255,255,255,0) 31%,
+      rgba(150,196,236,.20) 41%, rgba(196,224,252,.30) 44%,
+      rgba(120,170,220,.12) 47%, rgba(255,255,255,0) 50%,
+      rgba(168,206,240,.16) 57%, rgba(255,255,255,0) 60%,
+      rgba(206,230,252,.26) 65%, rgba(255,255,255,0) 69%,
+      rgba(178,212,242,.18) 76%, rgba(255,255,255,0) 79%,
+      rgba(255,255,255,0) 100%);
+    filter:blur(13px);
+    animation:colsDrift 15s ease-in-out infinite;
+  }
+  @keyframes colsDrift{
+    0%,100%{transform:translate3d(0,0,0) scaleX(1);opacity:.6}
+    34%{transform:translate3d(-4.2%,1.4%,0) scaleX(1.06);opacity:1}
+    68%{transform:translate3d(3.2%,-1%,0) scaleX(.96);opacity:.72}
+  }
+  /* яркое скопление у правого края */
+  .spectral .bright{
+    right:-6%;top:-16%;width:46%;height:132%;
+    background:linear-gradient(101deg,
+      rgba(255,255,255,0) 0%,
+      rgba(214,236,255,.34) 22%, rgba(246,252,255,.5) 30%,
+      rgba(190,222,250,.22) 36%, rgba(255,255,255,0) 44%,
+      rgba(228,242,255,.4) 58%, rgba(255,255,255,.46) 64%,
+      rgba(200,228,252,.2) 70%, rgba(255,255,255,0) 82%);
+    filter:blur(9px);
+    mix-blend-mode:screen;
+    animation:brightDrift 11s ease-in-out infinite;
+  }
+  @keyframes brightDrift{
+    0%,100%{transform:translate3d(0,0,0) scaleX(1);opacity:.55}
+    40%{transform:translate3d(-5%,1.6%,0) scaleX(1.08);opacity:1}
+    72%{transform:translate3d(2.6%,-1.2%,0) scaleX(.95);opacity:.7}
+  }
+  /* тонкие царапины света снизу слева вверх направо */
+  .spectral .scratch{
+    inset:-20%;
+    background:repeating-linear-gradient(74deg,
+      rgba(255,255,255,0) 0px, rgba(255,255,255,0) 12px,
+      rgba(186,216,244,.05) 13px, rgba(255,255,255,0) 15px);
+    filter:blur(1.2px);opacity:.6;
+    animation:scratchDrift 19s linear infinite;
+  }
+  @keyframes scratchDrift{
+    0%{transform:translate3d(0,0,0);opacity:.35}
+    50%{opacity:.75}
+    100%{transform:translate3d(4%,-4%,0);opacity:.35}
+  }
+  /* пятно дисперсии: синий, голубой, жёлтый, оранжевый — снизу вверх */
+  .spectral .prism{
+    left:41%;top:44%;width:15%;height:26%;
+    background:
+      radial-gradient(58% 34% at 50% 12%,rgba(46,120,255,.72),rgba(46,120,255,0) 72%),
+      radial-gradient(54% 28% at 52% 34%,rgba(58,206,244,.6),rgba(58,206,244,0) 74%),
+      radial-gradient(50% 26% at 48% 58%,rgba(226,232,140,.5),rgba(226,232,140,0) 74%),
+      radial-gradient(46% 24% at 46% 78%,rgba(240,168,96,.44),rgba(240,168,96,0) 76%);
+    mix-blend-mode:screen;
+    animation:prismDrift 9s ease-in-out infinite;
+  }
+  /* дисперсия чуть плывёт и дышит — как настоящее преломление */
+  @keyframes prismDrift{
+    0%,100%{transform:translate3d(0,0,0) scale(1);opacity:.55;filter:blur(7px) hue-rotate(0deg)}
+    38%{transform:translate3d(4.5%,-3.4%,0) scale(1.22);opacity:1;filter:blur(6px) hue-rotate(14deg)}
+    70%{transform:translate3d(-3%,2.2%,0) scale(.92);opacity:.66;filter:blur(8px) hue-rotate(-10deg)}
+  }
+  /* общая расфокусировка: мягкая дымка поверх всего */
+  .spectral .veil{
+    inset:0;
+    background:radial-gradient(120% 90% at 78% 18%,rgba(150,190,230,.16),rgba(0,0,0,0) 62%);
+  }
 
   /* сама жидкость: капли перетекают друг сквозь друга */
   .liquid{position:absolute;inset:-25%;z-index:0;pointer-events:none;
@@ -1059,7 +1178,7 @@
     flex:none;font-size:10.5px;font-weight:300;letter-spacing:.04em;
     color:rgba(245,244,240,.42);
   }
-  .goal-num b{font-weight:600;font-size:13px;color:var(--gold);letter-spacing:.01em}
+  .goal-num b{font-weight:600;font-size:13px;color:#cfe2ff;letter-spacing:.01em}
   .goal-bar{
     position:relative;margin-top:11px;height:6px;border-radius:99px;overflow:hidden;
     background:rgba(255,255,255,.08);
@@ -1067,8 +1186,8 @@
   }
   .goal-bar i{
     position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;
-    background:linear-gradient(90deg,rgba(230,207,154,.85),rgba(255,226,170,1));
-    box-shadow:0 0 14px rgba(255,214,150,.5);
+    background:linear-gradient(90deg,rgba(150,196,255,.9),rgba(228,240,255,1));
+    box-shadow:0 0 14px rgba(150,200,255,.55);
     transition:width 1.4s cubic-bezier(.22,.9,.24,1);
   }
   /* блик бежит по заполненной части — сбор виден как живой */
@@ -1089,8 +1208,8 @@
   .seg-fill{
     position:absolute;top:4px;bottom:4px;left:4px;z-index:0;
     border-radius:12px;
-    background:linear-gradient(135deg,rgba(230,207,154,.95),rgba(232,186,152,.8));
-    box-shadow:0 6px 18px rgba(230,207,154,.24),inset 0 1px 0 rgba(255,255,255,.5);
+    background:linear-gradient(135deg,rgba(238,244,255,.95),rgba(206,222,246,.82));
+    box-shadow:0 6px 18px rgba(120,160,220,.28),inset 0 1px 0 rgba(255,255,255,.7);
     transition:transform .5s cubic-bezier(.34,1.4,.4,1),width .5s cubic-bezier(.34,1.4,.4,1);
   }
   /* сжатие идёт отдельным свойством scale, чтобы не спорить со сдвигом */
@@ -1107,7 +1226,7 @@
     color:rgba(245,244,240,.5);
     transition:color .35s;
   }
-  .seg button.on{color:#1c1608;font-weight:600}
+  .seg button.on{color:#16233a;font-weight:600}
   .seg button:disabled{opacity:.3;cursor:default}
 
   .give-label{
@@ -1129,9 +1248,9 @@
   }
   .cur button:hover{color:rgba(245,244,240,.8)}
   .cur button.on{
-    background:linear-gradient(135deg,rgba(230,207,154,.95),rgba(232,186,152,.8));
-    color:#1c1608;font-weight:700;
-    box-shadow:0 4px 12px rgba(230,207,154,.2),inset 0 1px 0 rgba(255,255,255,.5);
+    background:linear-gradient(135deg,rgba(238,244,255,.95),rgba(206,222,246,.82));
+    color:#16233a;font-weight:700;
+    box-shadow:0 4px 12px rgba(120,160,220,.24),inset 0 1px 0 rgba(255,255,255,.7);
   }
   .way.off{opacity:.42}
   .way.off:hover{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.12)}
@@ -1147,9 +1266,9 @@
   }
   .sums button:hover{background:rgba(255,255,255,.1)}
   .sums button.on{
-    background:linear-gradient(135deg,rgba(230,207,154,.95),rgba(232,186,152,.8));
-    color:#1c1608;font-weight:600;border-color:transparent;
-    box-shadow:0 8px 22px rgba(230,207,154,.22),inset 0 1px 0 rgba(255,255,255,.5);
+    background:linear-gradient(135deg,rgba(238,244,255,.95),rgba(206,222,246,.82));
+    color:#16233a;font-weight:600;border-color:transparent;
+    box-shadow:0 8px 22px rgba(120,160,220,.26),inset 0 1px 0 rgba(255,255,255,.7);
   }
   .sums button:active{transform:scale(.94)}
 
@@ -1232,7 +1351,11 @@
     pointer-events:auto;
     position:relative;overflow:hidden;
     width:min(480px,100%);
-    background:linear-gradient(165deg,rgba(255,255,255,.10),rgba(255,255,255,.03) 28%,rgba(14,14,17,.68) 100%);
+    background:
+      linear-gradient(24deg,
+        rgba(6,13,26,.94) 0%, rgba(10,22,42,.9) 26%,
+        rgba(18,38,66,.84) 52%, rgba(34,62,96,.78) 74%,
+        rgba(58,92,128,.72) 100%);
     border:1px solid rgba(255,255,255,.17);
     border-radius:var(--panel-r);
     backdrop-filter:blur(42px) saturate(1.7);
@@ -1448,7 +1571,10 @@
 
 <div class="panel-wrap" id="lessonWrap">
   <div id="lessonPanel">
-    <div class="liq" aria-hidden="true"><i class="q1"></i><i class="q2"></i><i class="q3"></i><i class="q4"></i></div>
+    <div class="spectral" aria-hidden="true">
+      <i class="cols"></i><i class="bright"></i><i class="scratch"></i>
+      <i class="prism"></i><i class="veil"></i>
+    </div>
     <div class="lesson-in">
       <button id="lessonBack" aria-label="К урокам">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
@@ -1475,9 +1601,10 @@
 
 <div class="panel-wrap" id="taskWrap">
   <div id="taskPanel">
-    <div class="liq" aria-hidden="true"><i class="q1"></i><i class="q2"></i><i class="q3"></i><i class="q4"></i></div>
-    <div class="caustic" aria-hidden="true"></div>
-    <div class="grain" aria-hidden="true"></div>
+    <div class="spectral" aria-hidden="true">
+      <i class="cols"></i><i class="bright"></i><i class="scratch"></i>
+      <i class="prism"></i><i class="veil"></i>
+    </div>
     <div class="lesson-in">
       <div class="task-lead">Ты прошёл первый шаг на пути духовного обучения</div>
       <div class="task-sub">Это только начало, и впереди — ещё больше глубины и откровений.
@@ -1503,8 +1630,10 @@
 
 <div class="panel-wrap" id="courseWrap">
   <div id="coursePanel">
-    <div class="liq warm" aria-hidden="true"><i class="q1"></i><i class="q2"></i><i class="q3"></i><i class="q4"></i></div>
-    <div class="caustic" aria-hidden="true"></div>
+    <div class="spectral" aria-hidden="true">
+      <i class="cols"></i><i class="bright"></i><i class="scratch"></i>
+      <i class="prism"></i><i class="veil"></i>
+    </div>
     <div class="lesson-in">
       <div class="course-top">
         <em>крест · любовь Христа</em>
@@ -1577,19 +1706,28 @@
 
 <div class="scrim" id="scrim"></div>
 
-<button id="giveBtn" aria-label="Поддержать" title="Поддержать"><span>
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
-       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M12 9.9 9.6 7.4a1.75 1.75 0 0 1 2.4-2.5l.1.1.1-.1a1.75 1.75 0 0 1 2.4 2.5z"/>
-    <path d="M4.6 13.1c0-.8.7-1.4 1.5-1.2l2.6.7v-1.9"/>
-    <path d="M8.7 16.4h4.6c.9 0 1.6-.7 1.6-1.5s-.7-1.4-1.6-1.4h-2.6"/>
-    <path d="M15.1 13.6l3.1-1.1c.8-.3 1.6.2 1.7 1 .1.7-.3 1.3-.9 1.6l-4.4 2.2c-.6.3-1.2.5-1.9.5H8.7c-.7 0-1.4-.3-1.9-.8l-2.2-2.1"/>
-  </svg>Дать</span></button>
+<button id="giveBtn" aria-label="Поддержать" title="Поддержать">
+  <span class="face">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 9.9 9.6 7.4a1.75 1.75 0 0 1 2.4-2.5l.1.1.1-.1a1.75 1.75 0 0 1 2.4 2.5z"/>
+      <path d="M4.6 13.1c0-.8.7-1.4 1.5-1.2l2.6.7v-1.9"/>
+      <path d="M8.7 16.4h4.6c.9 0 1.6-.7 1.6-1.5s-.7-1.4-1.6-1.4h-2.6"/>
+      <path d="M15.1 13.6l3.1-1.1c.8-.3 1.6.2 1.7 1 .1.7-.3 1.3-.9 1.6l-4.4 2.2c-.6.3-1.2.5-1.9.5H8.7c-.7 0-1.4-.3-1.9-.8l-2.2-2.1"/>
+    </svg>
+    <i>Дать</i>
+  </span>
+</button>
 
 <div class="panel-wrap" id="giveWrap">
   <div id="givePanel">
-    <div class="liquid" aria-hidden="true"><i class="d1"></i><i class="d2"></i><i class="d3"></i><i class="d4"></i></div>
-    <div class="liquid-sheen" aria-hidden="true"></div>
+    <div class="spectral" aria-hidden="true">
+      <i class="cols"></i>
+      <i class="bright"></i>
+      <i class="scratch"></i>
+      <i class="prism"></i>
+      <i class="veil"></i>
+    </div>
 
     <div class="give-in">
       <h2>Дать</h2>
@@ -1642,6 +1780,10 @@
 
 <div class="panel-wrap" id="promiseWrap">
   <div id="promisePanel">
+    <div class="spectral" aria-hidden="true">
+      <i class="cols"></i><i class="bright"></i><i class="scratch"></i>
+      <i class="prism"></i><i class="veil"></i>
+    </div>
     <h2>Обещание на неделю</h2>
     <div class="from">от пасечника · для нашей семьи</div>
     <div id="promiseText">Загружаем…</div>
@@ -1661,6 +1803,10 @@
 
 <div class="panel-wrap">
   <div class="panel" id="panel">
+    <div class="spectral" aria-hidden="true">
+      <i class="cols"></i><i class="bright"></i><i class="scratch"></i>
+      <i class="prism"></i><i class="veil"></i>
+    </div>
     <h2>Ваше облако тегов</h2>
     <p>Введите слова через запятую — или вставьте целый текст (пост, заметку,
        страницу дневника): мы проанализируем его и соберём облако из ваших
