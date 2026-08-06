@@ -617,6 +617,41 @@
     margin-top:16px;display:flex;gap:9px;align-items:flex-start;
     font-size:12px;font-weight:300;line-height:1.55;color:rgba(245,244,240,.5);
   }
+  /* ввод слова, которое присылает куратор */
+  .task-key{margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.09)}
+  .task-key label{
+    display:block;font-size:9.5px;font-weight:300;letter-spacing:.16em;
+    text-transform:uppercase;color:rgba(245,244,240,.4);
+  }
+  .task-key-row{display:flex;gap:9px;margin-top:11px}
+  #keyInput{
+    flex:1;min-width:0;appearance:none;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:13px;padding:13px 15px;
+    font-family:var(--font);font-size:14px;font-weight:400;
+    color:var(--ink);caret-color:#cfe2ff;outline:none;
+    transition:border-color .3s,background .3s;
+  }
+  #keyInput:focus{border-color:rgba(160,205,255,.55);background:rgba(255,255,255,.09)}
+  #keyGo{
+    flex:none;appearance:none;border:0;cursor:pointer;
+    background:linear-gradient(135deg,#e6f0ff,#c2d9f8);color:#14203a;
+    font-family:var(--font);font-size:10.5px;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;
+    padding:0 20px;border-radius:13px;
+    transition:transform .3s cubic-bezier(.34,1.4,.4,1),box-shadow .3s;
+  }
+  #keyGo:hover{box-shadow:0 10px 28px rgba(140,185,255,.3)}
+  #keyGo:active{transform:scale(.97)}
+  .task-key-msg{
+    margin-top:10px;min-height:14px;
+    font-size:11.5px;font-weight:300;letter-spacing:.02em;
+    color:rgba(245,244,240,.5);
+  }
+  .task-key-msg.ok{color:#bcdcff}
+  .task-key-msg.no{color:rgba(255,176,150,.85)}
+
   #taskWrite{
     margin-top:20px;width:100%;
     appearance:none;border:0;cursor:pointer;position:relative;overflow:hidden;
@@ -1742,6 +1777,16 @@
 
       <button id="taskWrite">Написать куратору</button>
       <div class="task-who">@vashe_velikolepie</div>
+
+      <div class="task-key">
+        <label for="keyInput">Куратор пришлёт слово — введите его здесь</label>
+        <div class="task-key-row">
+          <input id="keyInput" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="слово из Библии">
+          <button id="keyGo">Открыть</button>
+        </div>
+        <div class="task-key-msg" id="keyMsg"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -3720,7 +3765,8 @@ const COURSE = {
             'зачем сатана искушал первых людей и что значит «жить без Бога».',
       yt: 'BCZsPFB1Tpk',
       rt: 'c4a6310fb3f0f26abd0af021f536f60b', p: 'Ce4tfgbnvU17hQMTpspKvg',
-      open: false },
+      open: false,
+      code: '12bcd04b93a9772f00540b79be7186bdef72aa6eff19b2d5d426140113b3177d' },
     { n: 3, title: 'Состояние неверующего и состояние мира',
       sub: 'урок 3 · путь спасения',
       desc: 'Почему многие люди не находят настоящей свободы и счастья? ' +
@@ -3729,7 +3775,8 @@ const COURSE = {
             'контролировать наши мысли и что значит быть по-настоящему свободным.',
       yt: 'nvlc5VJ5BI0',
       rt: '7ae5ee0823c0fc8a3096c112017610bb', p: 'MBgVJmC5XcVzIgE9dFdi1Q',
-      open: false }
+      open: false,
+      code: '8d129e473835af8762812c1c5cefb522541c481913b08fa86ff3842c3c2a76ed' }
   ]
 };
 
@@ -3756,6 +3803,27 @@ const taskPanel    = document.getElementById('taskPanel');
 const taskWrite    = document.getElementById('taskWrite');
 
 const CURATOR = 'https://t.me/vashe_velikolepie';
+
+/* Урок открывается словом, которое присылает куратор. В коде лежит не само
+   слово, а его отпечаток, поэтому вычитать его из исходника нельзя.
+   Открытое запоминается в памяти браузера — у каждого человека своё. */
+const LS_OPENED = 'aura_lessons_opened';
+
+const openedSet = () => {
+  try { return new Set(JSON.parse(localStorage.getItem(LS_OPENED) || '[]')); }
+  catch { return new Set(); }
+};
+const isUnlocked = it => it.open || openedSet().has(it.n);
+
+function normKey(w){
+  return (w || '').trim().toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я]/g, '');
+}
+
+async function keyPrint(w){
+  const bytes = new TextEncoder().encode(normKey(w));
+  const buf = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
 const SERIES  = 'https://t.me/+DWdSdorxCOw3NjQy';
 
 let lessonOpen = false, courseOpen = false, taskOpen = false;
@@ -3884,11 +3952,11 @@ function renderCourse(){
   courseList.innerHTML = '';
   COURSE.lessons.forEach(it => {
     const b = document.createElement('button');
-    b.className = 'lcard' + (it.open ? '' : ' locked');
+    b.className = 'lcard' + (isUnlocked(it) ? '' : ' locked');
     b.dataset.n = it.n;
     b.innerHTML =
       '<span class="num"></span><span class="nm"></span>' +
-      '<span class="badge">' + (it.open ? 'открыто' + ICON_OPEN : 'скоро' + ICON_LOCK) + '</span>';
+      '<span class="badge">' + (isUnlocked(it) ? 'открыто' + ICON_OPEN : 'закрыто' + ICON_LOCK) + '</span>';
     b.querySelector('.num').textContent = it.n;
     b.querySelector('.nm').textContent = it.title;
     courseList.appendChild(b);
@@ -3898,7 +3966,7 @@ function renderCourse(){
 courseList.addEventListener('click', e => {
   const b = e.target.closest('.lcard'); if (!b) return;
   const it = COURSE.lessons.find(x => x.n === +b.dataset.n);
-  if (!it || !it.open){
+  if (!it || !isUnlocked(it)){
     closeCourse(true);
     openTask(b);            // рассказываем, как открыть следующий урок
     return;
@@ -3966,6 +4034,7 @@ function taskMorph(open, fromEl){
 function openTask(fromEl){
   if (taskOpen) return;
   taskOpen = true;
+  keyMsg.textContent = ''; keyMsg.className = 'task-key-msg'; keyInput.value = '';
   taskPanel.classList.add('visible');
   scrim.classList.add('on');
   taskPanel.classList.remove('settle');
@@ -3991,6 +4060,39 @@ lessonDone.addEventListener('click', () => {
 taskWrite.addEventListener('click', () => {
   window.open(CURATOR, '_blank', 'noopener');
 });
+
+const keyInput = document.getElementById('keyInput');
+const keyGo    = document.getElementById('keyGo');
+const keyMsg   = document.getElementById('keyMsg');
+
+async function tryKey(){
+  const said = normKey(keyInput.value);
+  if (!said){ keyMsg.textContent = ''; keyMsg.className = 'task-key-msg'; return; }
+  const print = await keyPrint(said);
+  const found = COURSE.lessons.find(it => it.code && it.code === print);
+
+  if (!found){
+    keyMsg.textContent = 'Такого слова нет. Проверьте написание.';
+    keyMsg.className = 'task-key-msg no';
+    return;
+  }
+  const opened = openedSet();
+  if (opened.has(found.n)){
+    keyMsg.textContent = 'Этот урок уже открыт.';
+    keyMsg.className = 'task-key-msg ok';
+    return;
+  }
+  opened.add(found.n);
+  localStorage.setItem(LS_OPENED, JSON.stringify([...opened]));
+  keyMsg.textContent = 'Открыт урок ' + found.n + ' — «' + found.title + '»';
+  keyMsg.className = 'task-key-msg ok';
+  keyInput.value = '';
+  renderCourse();
+  setTimeout(() => { closeTask(true); openCourse(taskWrite); }, 1200);
+}
+
+keyGo.addEventListener('click', tryKey);
+keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryKey(); });
 
 document.getElementById('seriesBtn').addEventListener('click', () => {
   window.open(SERIES, '_blank', 'noopener');
