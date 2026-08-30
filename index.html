@@ -4952,6 +4952,10 @@ const DEV_MODE = /[?&]dev=1/.test(location.search) ||
                  localStorage.getItem('aura_dev') === '1';
 if (/[?&]dev=1/.test(location.search)) localStorage.setItem('aura_dev', '1');
 
+// прямая ссылка на «7·7·7»: ?open=777 сразу открывает таблицу при заходе —
+// удобно отправить готовый вид, а не просить искать кнопку самому
+const OPEN_777 = /[?&]open=777\b/.test(location.search);
+
 const REAL_VISIT = location.protocol.startsWith('http') && !DEV_MODE &&
                    !/^(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1)/
                      .test(location.hostname);
@@ -6147,7 +6151,8 @@ async function loadPromise(){
   // ненавязчиво: раз в неделю сам, дальше — только по кнопке
   const seen = localStorage.getItem(LS_PROMISE_SEEN);
   const week = isoWeek();
-  if (promiseData?.found && !promiseAccepted() && seen !== week && !location.hash.startsWith('#s=')){
+  if (promiseData?.found && !promiseAccepted() && seen !== week &&
+      !location.hash.startsWith('#s=') && !OPEN_777){
     localStorage.setItem(LS_PROMISE_SEEN, week);
     setTimeout(openPromise, 2600);
   } else if (promiseData?.found && !promiseAccepted()){
@@ -6284,6 +6289,9 @@ if (sharedMatch){
     showToast('Ссылка устарела или повреждена — фото хранится 3 дня');
   });
 }
+
+// прямая ссылка на «7·7·7» — открываем, когда страница уже встала на ноги
+if (OPEN_777) setTimeout(() => openTable(), 900);
 
 requestAnimationFrame(frame);
 </script>
