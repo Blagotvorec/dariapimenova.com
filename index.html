@@ -671,6 +671,275 @@
     color:rgba(245,244,240,.32);
   }
 
+  /* ---------- «7·7·7»: кнопка рядом с + ---------- */
+  #tableBtn{
+    position:fixed;right:94px;bottom:32px;z-index:6;
+    width:48px;height:48px;border-radius:50%;
+    appearance:none;cursor:pointer;overflow:hidden;
+    background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.04) 60%);
+    border:1px solid rgba(255,255,255,.24);
+    color:rgba(245,244,240,.8);
+    backdrop-filter:blur(26px) saturate(1.8);
+    -webkit-backdrop-filter:blur(26px) saturate(1.8);
+    box-shadow:0 10px 34px rgba(0,0,0,.55),
+               inset 0 1px 0 rgba(255,255,255,.32),
+               inset 0 -1px 1px rgba(255,255,255,.06);
+    display:flex;align-items:center;justify-content:center;
+    transition:box-shadow .3s,border-color .3s,transform .35s cubic-bezier(.22,.9,.24,1),opacity .3s;
+    opacity:.6;
+  }
+  #tableBtn::before{
+    content:'';position:absolute;inset:0;border-radius:inherit;
+    background:radial-gradient(120% 85% at 30% 0%,rgba(255,255,255,.34),rgba(255,255,255,0) 55%);
+    pointer-events:none;
+  }
+  #tableBtn:hover{
+    opacity:1;transform:scale(1.08);
+    border-color:rgba(255,255,255,.38);
+    box-shadow:0 14px 44px rgba(0,0,0,.6),
+               inset 0 1px 0 rgba(255,255,255,.42),
+               inset 0 -1px 1px rgba(255,255,255,.08);
+  }
+  #tableBtn:active{transform:scale(.96)}
+  #tableBtn.hidden{opacity:0;pointer-events:none;transform:scale(.4)}
+  #tableBtn span{
+    position:relative;z-index:1;
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:10.5px;font-weight:600;letter-spacing:.01em;
+    line-height:1;
+  }
+
+  /* ---------- «7·7·7»: сама таблица ---------- */
+  #tablePanel{
+    pointer-events:auto;
+    position:relative;overflow:hidden;
+    width:min(560px,100%);
+    border-radius:34px;
+    background:
+      linear-gradient(24deg,
+        rgba(6,13,26,.94) 0%, rgba(10,22,42,.9) 26%,
+        rgba(18,38,66,.84) 52%, rgba(34,62,96,.78) 74%,
+        rgba(58,92,128,.72) 100%);
+    border:1px solid rgba(255,255,255,.13);
+    backdrop-filter:blur(46px) saturate(2.2);
+    -webkit-backdrop-filter:blur(46px) saturate(2.2);
+    box-shadow:0 46px 130px rgba(0,0,0,.85),
+               inset 0 1px 0 rgba(255,255,255,.34),
+               inset 0 -46px 90px rgba(255,255,255,.04);
+    padding:30px 26px 24px;
+    display:none;will-change:transform;
+  }
+  #tablePanel.visible{display:block}
+  #tablePanel.settle{animation:dropSettle 1.25s cubic-bezier(.22,.9,.24,1)}
+  #tablePanel::after{
+    content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
+    background:conic-gradient(from var(--rim),
+      rgba(255,255,255,.6),rgba(150,196,255,.5),rgba(154,230,216,.34),
+      rgba(255,206,132,.28),rgba(255,255,255,.06),rgba(255,255,255,.6));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    mask-composite:exclude;
+    animation:rimFlow 20s linear infinite;
+    pointer-events:none;z-index:4;
+  }
+  #tablePanel::before{
+    content:'';position:absolute;left:8%;right:8%;top:0;height:50%;
+    background:radial-gradient(120% 100% at 50% 0,rgba(255,255,255,.2),rgba(255,255,255,0) 62%);
+    pointer-events:none;z-index:3;border-radius:inherit;
+  }
+  #tablePanel .lesson-in{max-height:80vh;overflow-y:auto;scrollbar-width:none}
+  #tablePanel .lesson-in::-webkit-scrollbar{display:none}
+
+  .tbl-top em{
+    display:block;font-style:normal;
+    font-size:9.5px;font-weight:300;letter-spacing:.28em;text-transform:uppercase;
+    color:rgba(176,214,255,.5);
+  }
+  #tablePanel h2{
+    margin-top:7px;
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:27px;font-weight:500;letter-spacing:.05em;color:#fdf8ee;
+  }
+  .tbl-intro{
+    margin-top:12px;font-size:12.5px;font-weight:300;line-height:1.68;
+    letter-spacing:.01em;color:rgba(238,245,255,.62);
+  }
+  .tbl-hint{
+    margin-top:10px;font-size:9px;font-weight:400;letter-spacing:.18em;
+    text-transform:uppercase;color:rgba(176,214,255,.4);
+  }
+  /* легенда трёх колонок */
+  .tbl-legend{
+    display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:16px;
+  }
+  .tbl-legend span{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--font);font-size:9.5px;font-weight:400;
+    letter-spacing:.06em;color:rgba(245,244,240,.5);
+  }
+  .tbl-legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .tbl-legend .c-tower{background:rgba(154,230,216,.85)}
+  .tbl-legend .c-journey{background:rgba(150,196,255,.85)}
+  .tbl-legend .c-signpost{background:rgba(255,206,132,.85)}
+
+  .tbl-rows{margin-top:20px;display:flex;flex-direction:column;gap:12px}
+  .tbl-row{
+    position:relative;padding:16px 16px 15px;border-radius:20px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.1);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 10px 30px rgba(0,0,0,.26);
+  }
+  .tbl-row-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .tbl-num{
+    flex:none;width:26px;height:26px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:600;letter-spacing:.02em;
+    background:linear-gradient(140deg,rgba(255,255,255,.16),rgba(255,255,255,.04));
+    border:1px solid rgba(255,255,255,.14);
+    color:rgba(206,230,255,.92);
+  }
+  .tbl-group-tag{
+    display:inline-flex;padding:4px 11px;border-radius:999px;
+    font-family:var(--font);font-size:8.5px;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+    color:rgba(245,244,240,.6);
+  }
+
+  .tbl-cell + .tbl-cell{margin-top:8px}
+  .tbl-col-label{
+    display:block;margin-bottom:6px;
+    font-family:var(--font);font-size:8.5px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;
+  }
+  .tbl-cell.tower .tbl-col-label{color:rgba(154,230,216,.75)}
+  .tbl-cell.journey .tbl-col-label{color:rgba(150,196,255,.8)}
+  .tbl-cell.signpost .tbl-col-label{color:rgba(255,206,132,.8)}
+
+  .tbl-acc{
+    width:100%;appearance:none;cursor:pointer;text-align:left;
+    display:flex;align-items:center;gap:10px;
+    padding:11px 12px;border-radius:13px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.1);
+    color:var(--ink);
+    transition:background .3s,border-color .3s;
+  }
+  .tbl-acc:hover{background:rgba(255,255,255,.085)}
+  .tbl-acc-head{flex:1;min-width:0}
+  .tbl-acc-head b{
+    display:block;font-family:'Playfair Display',Georgia,serif;
+    font-size:14px;font-weight:600;letter-spacing:.01em;color:#fbf8f2;
+  }
+  .tbl-acc-head i{
+    display:block;margin-top:2px;font-style:normal;
+    font-size:11px;font-weight:300;color:rgba(245,244,240,.46);
+  }
+  .tbl-plus{
+    flex:none;width:16px;height:16px;color:rgba(245,244,240,.4);
+    transition:transform .38s cubic-bezier(.22,.9,.24,1),color .3s;
+  }
+  .tbl-cell.open .tbl-acc .tbl-plus{transform:rotate(45deg);color:rgba(206,230,255,.85)}
+  .tbl-cell.open .tbl-acc{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.16)}
+
+  /* раскрытие без замера высоты в JS */
+  .tbl-body{
+    display:grid;grid-template-rows:0fr;
+    transition:grid-template-rows .42s cubic-bezier(.22,.9,.24,1);
+  }
+  .tbl-cell.open .tbl-body{grid-template-rows:1fr}
+  .tbl-body-in{overflow:hidden;min-height:0}
+  .tbl-body-pad{padding:13px 4px 3px 12px}
+
+  .tbl-essence{
+    font-size:12px;font-weight:300;line-height:1.62;letter-spacing:.01em;
+    color:rgba(238,245,255,.66);
+    padding-bottom:10px;margin-bottom:10px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .tbl-list{display:flex;flex-direction:column;gap:8px}
+  .tbl-list li{
+    display:flex;gap:9px;align-items:flex-start;
+    font-size:12px;font-weight:300;line-height:1.5;color:rgba(245,244,240,.76);
+  }
+  .tbl-list li::before{
+    content:'';flex:none;width:5px;height:5px;margin-top:6px;border-radius:50%;
+    background:rgba(206,230,255,.5);
+  }
+  .tbl-list b{font-weight:500;color:rgba(250,248,242,.94)}
+  .tbl-ref{
+    display:inline-block;margin-left:6px;
+    font-family:var(--font);font-size:9.5px;letter-spacing:.02em;
+    color:rgba(176,214,255,.55);white-space:nowrap;
+  }
+  .tbl-grp{margin-top:12px}
+  .tbl-grp:first-child{margin-top:0}
+  .tbl-grp h4{
+    margin:0 0 8px;font-family:var(--font);font-size:9px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;color:rgba(206,230,255,.5);
+  }
+  .tbl-note{
+    margin-top:10px;padding-top:9px;border-top:1px dashed rgba(255,255,255,.1);
+    font-size:11px;font-weight:300;font-style:italic;color:rgba(245,244,240,.4);
+  }
+  .tbl-conflict{
+    margin-top:11px;padding:9px 11px;border-radius:10px;
+    background:rgba(255,196,132,.09);border-left:2px solid rgba(255,196,132,.5);
+    font-size:11px;font-weight:300;line-height:1.55;color:rgba(255,222,182,.85);
+  }
+  .tbl-conflict b{font-weight:600;color:rgba(255,232,204,.95)}
+
+  /* три карточки Отец / Сын / Дух Святой */
+  .tbl-trine{display:flex;flex-direction:column;gap:8px}
+  .tbl-tcard{border-left:3px solid rgba(255,255,255,.2);padding:5px 0 5px 11px}
+  .tbl-tcard.father{border-color:rgba(140,200,150,.7)}
+  .tbl-tcard.son{border-color:rgba(220,130,120,.7)}
+  .tbl-tcard.spirit{border-color:rgba(140,160,230,.7)}
+  .tbl-tcard u{
+    display:inline-block;text-decoration:none;
+    font-family:var(--font);font-size:8.5px;font-weight:600;
+    letter-spacing:.1em;text-transform:uppercase;
+    padding:2px 8px;border-radius:8px;color:#0e1220;
+    background:rgba(255,255,255,.85);margin-bottom:3px;
+  }
+  .tbl-tcard.father u{background:rgba(160,214,168,.9)}
+  .tbl-tcard.son u{background:rgba(232,160,150,.9)}
+  .tbl-tcard.spirit u{background:rgba(170,186,235,.9)}
+  .tbl-tcard b{
+    display:block;font-family:'Playfair Display',Georgia,serif;
+    font-size:13px;font-weight:600;color:#fbf8f2;
+  }
+
+  /* разделитель «работа в команде →» */
+  .tbl-divider{
+    display:flex;align-items:center;gap:12px;margin:6px 0 2px;
+    font-family:var(--font);font-size:9px;font-weight:600;
+    letter-spacing:.2em;text-transform:uppercase;color:rgba(255,206,132,.6);
+  }
+  .tbl-divider::before,.tbl-divider::after{
+    content:'';flex:1;height:1px;
+    background:linear-gradient(90deg,rgba(255,214,150,0),rgba(255,214,150,.3),rgba(255,214,150,0));
+  }
+
+  .tbl-foot{
+    margin-top:18px;padding:14px 15px;border-radius:16px;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+    font-size:11px;font-weight:300;line-height:1.6;color:rgba(245,244,240,.5);
+  }
+  .tbl-foot b{font-weight:500;color:rgba(245,244,240,.7)}
+  .tbl-source{
+    margin-top:12px;text-align:center;
+    font-family:var(--font);font-size:8.5px;font-weight:400;
+    letter-spacing:.1em;color:rgba(245,244,240,.24);
+  }
+
+  @media (max-width:600px){
+    #tableBtn{width:40px;height:40px;right:60px;bottom:72px}
+    #tableBtn span{font-size:9px}
+    #tablePanel{padding:24px 18px 20px;border-radius:28px}
+    #tablePanel h2{font-size:22px}
+  }
+
   /* ---------- статистика ---------- */
   .stats{
     display:none;align-items:center;gap:7px;margin-top:9px;
@@ -1826,6 +2095,494 @@
   </div>
 </div>
 
+<div class="panel-wrap" id="tableWrap">
+  <div id="tablePanel">
+    <div class="spectral" aria-hidden="true">
+      <i class="cols"></i><i class="bright"></i><i class="scratch"></i>
+      <i class="prism"></i><i class="veil"></i>
+    </div>
+    <div class="lesson-in">
+      <div class="tbl-top">
+        <em>полная таблица соответствий</em>
+        <h2>7 · 7 · 7</h2>
+      </div>
+      <p class="tbl-intro">Смысл каждого пункта — из конспектов трёх богослужений. Точная структура,
+        подписи и места Писания — по официальной «Таблице Ученичества».</p>
+      <p class="tbl-hint">нажмите на пункт, чтобы раскрыть ▾</p>
+      <div class="tbl-legend">
+        <span><i class="c-tower"></i>Башня</span>
+        <span><i class="c-journey"></i>Путешествие</span>
+        <span><i class="c-signpost"></i>Указатель</span>
+      </div>
+
+      <div class="tbl-rows" id="tableRows">
+
+        <!-- РЯД 1 -->
+        <div class="tbl-row">
+          <div class="tbl-row-head">
+            <span class="tbl-num">1</span>
+            <span class="tbl-group-tag">личный рост</span>
+          </div>
+          <div class="tbl-cell tower">
+            <span class="tbl-col-label">Башня · основание</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Триединый Бог</b><i>Отец · Сын · Дух Святой</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <div class="tbl-trine">
+                <div class="tbl-tcard father"><u>Отец</u><b>Царь</b></div>
+                <div class="tbl-tcard son"><u>Сын</u><b>Священник</b></div>
+                <div class="tbl-tcard spirit"><u>Дух Святой</u><b>Пророк</b></div>
+              </div>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell journey">
+            <span class="tbl-col-label">Путешествие · система</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Благословение Престола</b><i>со мною / с нами / во всём</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">То же откровение о Боге проверяется в трёх слоях опыта: Бог со мной лично — я не теряюсь в любых обстоятельствах; Бог с нами — с церковью, с командой; Бог во всех ситуациях — включая кризис и тупик.</p>
+              <ul class="tbl-list">
+                <li><b>Бог со мною</b> — Триединый Бог</li>
+                <li><b>Бог с нами</b> — Еммануил</li>
+                <li><b>Бог вместе во всём</b> — во всех жизненных ситуациях</li>
+              </ul>
+              <p class="tbl-note">Эти три состояния — рамка, внутри которой разворачиваются все 10 тайн (см. Путешествие 2)</p>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell signpost">
+            <span class="tbl-col-label">Указатель · миссия</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Гора Голгофа</b><i>«Свершилось!»</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Момент, когда приходит настоящее понимание того, что сделал Христос: дело завершено, ничего не нужно добавлять. Если ученик не сосредоточен именно на Божьей воле здесь, дальнейшее оживотворение не произойдёт — весь путь начинается только отсюда.</p>
+              <ul class="tbl-list"><li><b>Свершилось!</b> Иисус есть Христос<span class="tbl-ref">Ин 19:30</span></li></ul>
+            </div></div></div>
+          </div>
+        </div>
+
+        <!-- РЯД 2 -->
+        <div class="tbl-row">
+          <div class="tbl-row-head"><span class="tbl-num">2</span></div>
+          <div class="tbl-cell tower">
+            <span class="tbl-col-label">Башня · основание</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Престол</b><i>3 превосходства · 3 жизни · 3 ответа</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <div class="tbl-grp"><h4>3 превосходства над язычниками</h4>
+                <ul class="tbl-list">
+                  <li><b>Власть Престола</b> — Благословения Царя</li>
+                  <li><b>Сила престола</b> — Вне времени, вне пространства</li>
+                  <li><b>Ресурсы престола</b> — Обеспечение для евангелизации</li>
+                </ul>
+              </div>
+              <div class="tbl-grp"><h4>3 жизни</h4>
+                <ul class="tbl-list">
+                  <li><b>Образ Божий</b><span class="tbl-ref">Быт 1:27</span></li>
+                  <li><b>Благословения Эдема</b><span class="tbl-ref">Быт 2:1-18</span></li>
+                  <li><b>Дыхание жизни</b><span class="tbl-ref">Быт 2:7</span></li>
+                </ul>
+              </div>
+              <div class="tbl-grp"><h4>3 небывалых ответа</h4>
+                <ul class="tbl-list">
+                  <li><b>Я (статус)</b><span class="tbl-ref">Ин 1:12</span></li>
+                  <li><b>Церковь</b><span class="tbl-ref">1 Кор 3:18; Ин 14:14-16; Лк 10:19; Евр 1:14</span></li>
+                  <li><b>Места действий</b><span class="tbl-ref">Фил 3:20; Дн 1:8; Мф 28:18-20</span></li>
+                </ul>
+              </div>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell journey">
+            <span class="tbl-col-label">Путешествие · система</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>10 Тайн</b><i>сгруппированы по 3 состояниям престола</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Бог со мной 24/7 — самостоятельность мыслить по Божьему плану. Знание духовной реальности переводит невидимое в видимое. «25-й час» рождается, когда решаешь идти в горницу, слушать и применять услышанное. Синергия — взаимодействие с Богом, церковью, местом действия. Кризис — момент, где Бог раскрывает план. «Нет конкуренции» — Бог, пишущий историю, действует через меня. Новое сотворение — духовная жизнь отличается от душевной. Тайна проповедования открывает двери. Пустыня — школа, где Бог выстраивает систему жизни. Всё собирается в абсолютную цель, команду и систему.</p>
+              <div class="tbl-grp"><h4>Под «Бог со мною» (Триединый Бог)</h4>
+                <ul class="tbl-list">
+                  <li><b>1. Самостоятельность</b> — способность выживать (24)</li>
+                  <li><b>2. Духовная реальность</b> — корень проблемы<span class="tbl-ref">Быт 3</span>; духовные глаза<span class="tbl-ref">2 Кор 4:3-4</span>; ложь сатаны<span class="tbl-ref">Ин 8:44</span></li>
+                  <li><b>3. Сила ответа</b> (25)<span class="tbl-ref">Дн 1:1,3,8; 2:1-47</span></li>
+                  <li><b>4. Синергия — Взаимодействие:</b> человек с Богом; человек с местами действия; человек с церковью</li>
+                  <li><b>5. Кризис (шанс)</b> — выявить Божий план</li>
+                  <li><b>6. Нет конкуренции</b> (т.к. есть 3 превосходства) — восстановление<span class="tbl-ref">Быт 1:27</span></li>
+                </ul>
+              </div>
+              <div class="tbl-grp"><h4>Под «Бог с нами» (Еммануил)</h4>
+                <ul class="tbl-list">
+                  <li><b>7. Новое сотворение</b> — духовный; культурный; высший</li>
+                  <li><b>8. Саммит</b> — знание будущего</li>
+                  <li><b>9. Пустыня</b> — формирование</li>
+                </ul>
+              </div>
+              <div class="tbl-grp"><h4>Под «Бог вместе во всём»</h4>
+                <ul class="tbl-list">
+                  <li><b>10. Абсолютное</b><span class="tbl-ref">Мф 24:14</span> — ассоциированное призвание (миссионерство): цель; система; ученик</li>
+                </ul>
+              </div>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell signpost">
+            <span class="tbl-col-label">Указатель · миссия</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Гора Елеон</b><i>миссия, система</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Миссия — органический процесс: желание быть частью Божьей работы рождается изнутри, а не по обязанности. Если миссии нет, в голове — «бардак». Вечный Бог рождает вечную миссию.</p>
+              <ul class="tbl-list"><li><b>Миссия</b>; <b>система</b><span class="tbl-ref">Дн 1:3</span></li></ul>
+            </div></div></div>
+          </div>
+        </div>
+
+        <!-- РЯД 3 -->
+        <div class="tbl-row">
+          <div class="tbl-row-head"><span class="tbl-num">3</span></div>
+          <div class="tbl-cell tower">
+            <span class="tbl-col-label">Башня · основание</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>3 Эпохи</b><i>Я · Церковь · Работа</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <div class="tbl-grp"><h4>Эпоха «Я»</h4>
+                <ul class="tbl-list">
+                  <li><b>Прошлое</b> — коренная проблема<span class="tbl-ref">Еф 1:4 (избрание)</span>; платформа будущего</li>
+                  <li><b>Настоящее</b> — 3 сегодня; эпоха 40, 365, 24/7</li>
+                  <li><b>Будущее</b><span class="tbl-ref">Мф 24:14</span></li>
+                </ul>
+              </div>
+              <div class="tbl-grp"><h4>Эпоха «Церковь»</h4>
+                <ul class="tbl-list">
+                  <li><b>Пастор</b> — эпохальный</li>
+                  <li><b>ЛПВ</b> — эпохальная команда, верные<span class="tbl-ref">Рим 16</span></li>
+                  <li><b>Rt</b> — ученик воспроизводства<span class="tbl-ref">Ис 6:13</span></li>
+                </ul>
+              </div>
+              <div class="tbl-grp"><h4>Эпоха «Работа»</h4>
+                <ul class="tbl-list">
+                  <li><b>Талант</b> — выявление способности</li>
+                  <li><b>Специализация</b> — развитие способностей</li>
+                  <li><b>Глобализация</b> — масштабирование способностей</li>
+                </ul>
+                <p class="tbl-note">Ученики → Команда → Обучение</p>
+              </div>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell journey">
+            <span class="tbl-col-label">Путешествие · система</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>10 оснований</b><i>суверенитет, метод, сила, авторитет…</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Бог суверенен и Сам пишет историю. Иисус Христос показывает, как жить жизнью веры. Дух Святой совершает Божью работу. Писание имеет авторитет. Бог действует только через ученика. Место, где я сейчас нахожусь, — моё место действия. Задача — готовить людей к вечной жизни. За это есть награда благовестника уже при жизни и награда на небесах.</p>
+              <ul class="tbl-list">
+                <li><b>1. Божий суверенитет</b><span class="tbl-ref">1 Пар 29:10-12</span></li>
+                <li><b>2. Божий способ (метод)</b> — главный герой Иисус Христос<span class="tbl-ref">Еф 1:1-12, 15-19</span></li>
+                <li><b>3. Божья сила (действие)</b> — Дух Святой<span class="tbl-ref">Ин 14:14-16; 1:3-2</span></li>
+                <li><b>4. Авторитет Библии</b> — Божье слово<span class="tbl-ref">2 Тим 3:14-17; Евр 4:12-13</span></li>
+                <li><b>5. Божий храм</b> — ученик<span class="tbl-ref">1 Кор 3:16</span></li>
+                <li><b>6. Место миссионерства</b> — где я нахожусь?<span class="tbl-ref">Дн 18:1-4</span> — пример: Павел, иудеи из Италии, Акила и Прискилла</li>
+                <li><b>7. Божье управление</b><span class="tbl-ref">Пс 138:1-9; Вт 30:19</span></li>
+                <li><b>8. Божье провидение</b><span class="tbl-ref">Евр 9:27-28</span></li>
+                <li><b>9. Божий суд</b> — загробная жизнь<span class="tbl-ref">Лк 16:19-31</span></li>
+                <li><b>10. Божья награда</b> — награда благовестника<span class="tbl-ref">Мф 10:40-42</span></li>
+              </ul>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell signpost">
+            <span class="tbl-col-label">Указатель · миссия</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Горница Марка</b><i>5 дверей действия Духа</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Горница — место, где Бог начинает прикладывать людей к человеку с миссией. Именно отсюда рождаются 5 команд — потому что там собираются ученики, сосредоточенные на исполнении воли Божьей.</p>
+              <ul class="tbl-list"><li>Действие Духа Святого<span class="tbl-ref">Дн 2:1-47</span></li></ul>
+              <div class="tbl-grp"><h4>5 дверей</h4>
+                <ul class="tbl-list">
+                  <li><b>1.</b> Единодушно вместе<span class="tbl-ref">Дн 2:1, 2:44</span></li>
+                  <li><b>2.</b> Миссионерство в странах<span class="tbl-ref">Дн 2:9-11</span></li>
+                  <li><b>3.</b> 3000 учеников — абсолютное течение проповедования</li>
+                  <li><b>4.</b> Экономика<span class="tbl-ref">Дн 2:43-45</span></li>
+                  <li><b>5.</b> Успех</li>
+                </ul>
+              </div>
+            </div></div></div>
+          </div>
+        </div>
+
+        <!-- РЯД 4 -->
+        <div class="tbl-row">
+          <div class="tbl-row-head"><span class="tbl-num">4</span></div>
+          <div class="tbl-cell tower">
+            <span class="tbl-col-label">Башня · основание</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Сила победы над сатаной</b><i>не обманывайся</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <ul class="tbl-list">
+                <li><b>Не обманывайся</b><span class="tbl-ref">Еф 2:2</span> — собой, людьми, обстоятельствами</li>
+                <li><b>Духовные глаза</b><span class="tbl-ref">Рим 12:1-2</span> — мышление</li>
+                <li><b>Культура</b> — СМИ, праздники, религия</li>
+                <li><b>Идеология</b> — политика</li>
+                <li><b>Состояние мира</b><span class="tbl-ref">Дн 13, 16, 19</span></li>
+              </ul>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell journey">
+            <span class="tbl-col-label">Путешествие · система</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>5 Уверенностей</b><i>спасение, прощение, молитва…</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Покровительство дьявола больше не имеет власти над нашей жизнью. Уверенность — это вера, испытанная на практике, а не просто заявленная. Не полагаться на собственный разум, а только на Бога и Его слово. Бог не допускает искушений сверх сил, которые способны сломать.</p>
+              <ul class="tbl-list">
+                <li><b>1. В спасении</b><span class="tbl-ref">1 Ин 5:10-13</span></li>
+                <li><b>2. В прощении грехов</b><span class="tbl-ref">1 Ин 1:9</span></li>
+                <li><b>3. В ответах на молитву</b><span class="tbl-ref">Иер 33:1-3; Ин 16:24</span></li>
+                <li><b>4. В водительстве Духа Святого</b><span class="tbl-ref">Притч 3:5-6</span></li>
+                <li><b>5. В победе</b><span class="tbl-ref">1 Кор 10:12; Рим 8:37</span></li>
+              </ul>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell signpost">
+            <span class="tbl-col-label">Указатель · миссия</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Антиохия</b><i>распространение по регионам</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Бог допустил гонения на Иерусалимскую церковь, и верующие рассеялись по другим регионам — так началось распространение веры за пределы одного места.</p>
+              <ul class="tbl-list">
+                <li>Проповедование и миссионерство<span class="tbl-ref">Дн 11:19-30</span></li>
+                <li>Сосредоточение на миссии и воспитание учеников</li>
+              </ul>
+            </div></div></div>
+          </div>
+        </div>
+
+        <div class="tbl-divider">работа в команде →</div>
+
+        <!-- РЯД 5 -->
+        <div class="tbl-row">
+          <div class="tbl-row-head">
+            <span class="tbl-num">5</span>
+            <span class="tbl-group-tag">команда</span>
+          </div>
+          <div class="tbl-cell tower">
+            <span class="tbl-col-label">Башня · основание</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>5 сил</b><i>духовная, талант, здоровье, финансы, ученики</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Духовная сила — знать «кто я», зачем я здесь, какой Божий план. Мудрость — когда знание стало образом жизни. Здоровье — независимо от обстоятельств следовать за Христом. Финансы — ресурс для построения абсолютной системы. Ученик — три точки отношений: первая встреча, последняя встреча, вечная встреча.</p>
+              <ul class="tbl-list">
+                <li><b>01 Духовная</b></li>
+                <li><b>02 Талант · Мудрость · Практика</b></li>
+                <li><b>03 Здоровье</b></li>
+                <li><b>04 Финансы</b></li>
+                <li><b>05 Ученики</b></li>
+              </ul>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell journey">
+            <span class="tbl-col-label">Путешествие · система</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>9 течений</b><i>3 группы по 3</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Высота — самый высокий стандарт, евангелизация. Глубина — ученичество. Ширина — попадание в команду: умение видеть, кто выше, кто ниже, кто рядом, и держать в поле зрения прошлое, настоящее и будущее одновременно.</p>
+              <div class="tbl-grp"><h4>Стандарт</h4>
+                <ul class="tbl-list">
+                  <li><b>1. Высота</b> — евангелизация</li>
+                  <li><b>2. Глубина</b> — фундаментальные послания</li>
+                  <li><b>3. Ширина</b> — команда</li>
+                </ul>
+              </div>
+              <div class="tbl-grp"><h4>Позиция</h4>
+                <ul class="tbl-list">
+                  <li><b>4. Выше</b> — авторитет</li>
+                  <li><b>5. Ниже</b> — служение</li>
+                  <li><b>6. Рядом</b> — наравне</li>
+                </ul>
+              </div>
+              <div class="tbl-grp"><h4>Время</h4>
+                <ul class="tbl-list">
+                  <li><b>7. Прошлое</b> — ДНК</li>
+                  <li><b>8. Настоящее</b> — кто я?</li>
+                  <li><b>9. Будущее</b> — моё призвание<span class="tbl-ref">Еф 2:5-7</span></li>
+                </ul>
+              </div>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell signpost">
+            <span class="tbl-col-label">Указатель · миссия</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Асия</b><i>руководство Духа Святого</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Здесь начинается собственно миссионерская работа — выход за пределы своей общины. Ключевое качество на этом этапе — терпение: плод не приходит быстро.</p>
+              <ul class="tbl-list">
+                <li>Руководство Духа Святого<span class="tbl-ref">Дн 13:1-4</span></li>
+                <li>Евангелизация мира</li>
+              </ul>
+            </div></div></div>
+          </div>
+        </div>
+
+        <!-- РЯД 6 -->
+        <div class="tbl-row">
+          <div class="tbl-row-head"><span class="tbl-num">6</span></div>
+          <div class="tbl-cell tower">
+            <span class="tbl-col-label">Башня · основание</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>CVDIP</b><i>завет, видение, мечта, образ, практика</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Завет — всемирная евангелизация. Видение — выстроить систему и увидеть, как этот завет реализуется. Мечта — сделать это своей личной мечтой. Образ — образ духовно сильного человека. Практика — проверка делом, «твоя диссертация». Главный принцип: полюбить не результат, а сам путь.</p>
+              <ul class="tbl-list">
+                <li><b>Завет (C)</b></li>
+                <li><b>Видение (V)</b></li>
+                <li><b>Мечта (D)</b></li>
+                <li><b>Образ (I)</b></li>
+                <li><b>Практика (P)</b></li>
+              </ul>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell journey">
+            <span class="tbl-col-label">Путешествие · система</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>62 аспекта</b><i>21 аспект + 5 тайн молитвы + 7 путей к саммиту</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">В основе — 21 аспект жизни благовестника, включающий отношения с Отцом, Сыном и Духом Святым и саму миссию. Делятся на три уровня: естественное (как рыба в воде), неизбежное (как встреча пары), абсолютное (обязательно даст плод).</p>
+              <div class="tbl-grp"><h4>21 аспект жизни благовестника (7 рядов × 3)</h4>
+                <ul class="tbl-list">
+                  <li><b>Ряд 1:</b> Голгофа · Елеон · Горница</li>
+                  <li><b>Ряд 2:</b> Небесное повеление · Призыв · Призвание</li>
+                  <li><b>Ряд 3:</b> Естественное · Необходимое · Абсолютное</li>
+                  <li><b>Ряд 4:</b> Единое сердце · Полное сердце · Постоянство</li>
+                  <li><b>Ряд 5:</b> Только · Уникальность · Новое сотворение</li>
+                  <li><b>Ряд 6:</b> 24 · 25 · Вечность</li>
+                  <li><b>Ряд 7:</b> Запечатленность · Корень · Сущность</li>
+                </ul>
+              </div>
+              <div class="tbl-grp"><h4>5 тайн молитвы</h4>
+                <ul class="tbl-list">
+                  <li>Благодарность за спасение</li>
+                  <li>Течение слова</li>
+                  <li>Сосредоточенность</li>
+                  <li>Исцеление</li>
+                  <li>Будущее</li>
+                </ul>
+              </div>
+              <div class="tbl-grp"><h4>7 путей к саммиту</h4>
+                <ul class="tbl-list">
+                  <li>Библия<span class="tbl-ref">7 Rt 1, 3, 8</span></li>
+                  <li>Богослужение</li>
+                  <li>Уникальность</li>
+                  <li>Новое сотворение</li>
+                </ul>
+              </div>
+              <p class="tbl-note">В таблице также отдельно упомянуты: 9 течений и 20 стратегий проповеди — как ещё два слоя внутри тех же 62 аспектов</p>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell signpost">
+            <span class="tbl-col-label">Указатель · миссия</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Македония</b><i>поворотный момент</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Дух Святой Сам направил Павла сюда. Македония, основанная войнами, приняла Евангелие с такой силой, что жители всегда жертвовали на миссию. То, что не взял меч, открылось через Слово Божье.</p>
+              <ul class="tbl-list">
+                <li>Поворотный момент<span class="tbl-ref">Дн 16:6-10</span></li>
+                <li>Эпохальная команда по миру</li>
+                <li>Допущены Духом Святым проповедовать Слово в Асии</li>
+              </ul>
+            </div></div></div>
+          </div>
+        </div>
+
+        <!-- РЯД 7 -->
+        <div class="tbl-row">
+          <div class="tbl-row-head"><span class="tbl-num">7</span></div>
+          <div class="tbl-cell tower">
+            <span class="tbl-col-label">Башня · основание</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>3 двора</b><i>язычники, исцеление, саммит</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Ежедневная работа (эпоха «пятницы») ведётся одновременно на нескольких дворах — с разными людьми нужен разный подход.</p>
+              <ul class="tbl-list">
+                <li><b>Язычники</b></li>
+                <li><b>Исцеление</b></li>
+                <li><b>Саммит</b></li>
+              </ul>
+              <p class="tbl-conflict">В конспекте Первого Богослужения эти же три двора названы иначе: <b>язычники · дети · религиозные</b>. Официальная таблица даёт: <b>язычники · исцеление · саммит</b>. Указаны оба варианта.</p>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell journey">
+            <span class="tbl-col-label">Путешествие · система</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Церковь и Богослужение</b><i>всемирная евангелизация</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <ul class="tbl-list">
+                <li>На церковь сходит Благословение Престола</li>
+                <li>Поэтому Всемирная Евангелизация совершается через Церковь и Богослужение</li>
+              </ul>
+              <p class="tbl-conflict">В более раннем конспекте Второго Богослужения это же место в списке называлось «7 путей к саммиту» (личный маршрут духовного роста). Официальная таблица заменяет это на «Церковь и Богослужение». Указаны оба варианта.</p>
+            </div></div></div>
+          </div>
+          <div class="tbl-cell signpost">
+            <span class="tbl-col-label">Указатель · миссия</span>
+            <button class="tbl-acc" type="button">
+              <span class="tbl-acc-head"><b>Рим</b><i>влияние на элиту</i></span>
+              <svg class="tbl-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.6v14.8M7.6 9.4h8.8"/></svg>
+            </button>
+            <div class="tbl-body"><div class="tbl-body-in"><div class="tbl-body-pad">
+              <p class="tbl-essence">Иисус пришёл из Назарета в Иерусалим, а Павел — из Иерусалима в Рим: путь миссии идёт от периферии к центру влияния. В Риме «восстаёт религия», но элита начинает слушать.</p>
+              <ul class="tbl-list">
+                <li>Влияние на элиту<span class="tbl-ref">Дн 19:21</span></li>
+                <li>Высший саммит</li>
+                <li>Вызов — предстать перед кесарем</li>
+              </ul>
+            </div></div></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="tbl-foot">
+        <b>Логика строки:</b> движение горизонтальное. Ряды 1–4 — то, что выстраивается в самом человеке (личный рост); ряды 5–7 — команда и миссия вовне.
+        <b>Сквозная структура:</b> в башнях 1–4 и в первых 6 тайнах путешествия 2 повторяется одна и та же трёхчастность — Отец / Сын / Дух Святой (Царь / Священник / Пророк) — как рамка, через которую проходит весь личный рост.
+      </div>
+      <div class="tbl-source">по материалам «Таблицы Ученичества» — без сокращений</div>
+    </div>
+  </div>
+</div>
+
 <div id="flagFx" aria-hidden="true">
   <canvas id="flagCv"></canvas>
   <div class="flag-cap" id="flagCap">
@@ -1872,6 +2629,10 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
     <path d="M12 5v14M5 12h14"/>
   </svg>
+</button>
+
+<button id="tableBtn" aria-label="7 · 7 · 7 — полная таблица соответствий" title="7 · 7 · 7 — полная таблица соответствий">
+  <span>7·7·7</span>
 </button>
 
 <div class="scrim" id="scrim"></div>
@@ -2114,8 +2875,16 @@ let personDirty = true;
 function loadImage(src){
   return new Promise((res, rej) => {
     const img = new Image();
-    // чужой хост: без этого холст «пачкается» и пиксели не прочитать
-    if (!/^data:/.test(src)) img.crossOrigin = 'anonymous';
+    // режим CORS нужен только для настоящего чужого хоста — без него холст
+    // «пачкается» и пиксели не прочитать. Свои файлы (man.png и т.п.) грузим
+    // как есть: лишний CORS-режим только повышает риск сбоя при сетевых
+    // неполадках или временной нестабильности домена, а самим файлам не нужен.
+    let foreign = false;
+    if (!/^data:/.test(src)){
+      try { foreign = new URL(src, location.href).origin !== location.origin; }
+      catch { foreign = true; }
+    }
+    if (foreign) img.crossOrigin = 'anonymous';
     img.onload = () => res(img);
     img.onerror = rej;
     img.src = src;
@@ -2726,7 +3495,8 @@ async function buildCustomPerson(g, dataURL, onStage){
   await stage('Готово!');
 }
 
-async function loadPerson(g){
+async function loadPerson(g, attempt){
+  attempt = attempt || 1;
   const cfg = PEOPLE[g];
   try {
     if (sharedPhotoLock.has(g)) return;
@@ -2735,13 +3505,21 @@ async function loadPerson(g){
       await buildCustomPerson(g, custom);
       return;
     }
-    const img = await loadImage(cfg.src);
+    // при повторной попытке сбрасываем возможный кэш плохого ответа
+    // (например, если CDN на секунду отдал что-то не то сразу после переезда домена)
+    const src = attempt === 1 ? cfg.src : cfg.src + '?retry=' + attempt;
+    const img = await loadImage(src);
     const cut = cutBackground(img, !!cfg.precut);
     if (sharedPhotoLock.has(g)) return;
     persons[g] = { cv: cut, w: cut.width, h: cut.height, cfg };
     personDirty = true;
     updateMissingHint();
   } catch (e){
+    if (attempt < 3){
+      console.warn('Фото не загрузилось, пробую ещё раз:', cfg.src, e);
+      setTimeout(() => loadPerson(g, attempt + 1), 600 * attempt);
+      return;
+    }
     console.warn('Не удалось загрузить/обработать фото:', cfg.src, e);
     persons[g] = null;
     updateMissingHint();
@@ -3293,8 +4071,10 @@ handleEl.addEventListener('dblclick', () => {
 });
 
 // колесо мыши — размер облака вместе со шрифтами
+// (пока открыто любое окно — крутится не облако, а содержимое окна)
 window.addEventListener('wheel', e => {
-  if (panelOpen) return;
+  if (panelOpen || promiseOpen || giveOpen || lessonOpen || courseOpen ||
+      taskOpen || creedOpen || tableOpen) return;
   e.preventDefault();
   applyCloudScale(e.deltaY < 0 ? 1.06 : 1 / 1.06);
   clearTimeout(saveTfTimer);
@@ -3946,6 +4726,53 @@ function closeCreed(){
 }
 
 creedBtn.addEventListener('click', e => { e.stopPropagation(); openCreed(); });
+
+/* ---------- «7·7·7»: полная таблица соответствий ---------- */
+const tableBtn = document.getElementById('tableBtn');
+const tablePanel = document.getElementById('tablePanel');
+let tableOpen = false;
+
+function tableMorph(open){
+  const pr = tablePanel.getBoundingClientRect();
+  const br = tableBtn.getBoundingClientRect();
+  const dx = (br.left + br.width / 2) - (pr.left + pr.width / 2);
+  const dy = (br.top + br.height / 2) - (pr.top + pr.height / 2);
+  const sc = Math.max(0.06, br.width / pr.width);
+  const small = { transform: `translate(${dx}px, ${dy}px) scale(${sc})`, opacity: 0.15 };
+  const full  = { transform: 'translate(0, 0) scale(1)', opacity: 1 };
+  return tablePanel.animate(open ? [small, full] : [full, small],
+    { duration: open ? 640 : 500, easing: EASE });
+}
+
+function openTable(){
+  if (tableOpen || panelOpen) return;
+  closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask(); closeCreed();
+  tableOpen = true;
+  tablePanel.classList.add('visible');
+  scrim.classList.add('on');
+  tablePanel.classList.remove('settle');
+  void tablePanel.offsetWidth;
+  tablePanel.classList.add('settle');
+  tableMorph(true);
+}
+
+function closeTable(){
+  if (!tableOpen) return;
+  tableOpen = false;
+  scrim.classList.remove('on');
+  tableMorph(false).onfinish = () => {
+    if (!tableOpen) tablePanel.classList.remove('visible', 'settle');
+  };
+}
+
+tableBtn.addEventListener('click', e => { e.stopPropagation(); openTable(); });
+
+// раскрывающиеся пункты — один делегированный обработчик на всю таблицу
+tablePanel.addEventListener('click', e => {
+  const acc = e.target.closest('.tbl-acc');
+  if (!acc) return;
+  acc.closest('.tbl-cell').classList.toggle('open');
+});
 
 /* ---------- окно курса ---------- */
 function renderCourse(){
@@ -5378,8 +6205,8 @@ function closePanel(){
   };
 }
 
-fab.addEventListener('click', () => { closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask(); closeCreed(); openPanel(); });
-scrim.addEventListener('click', () => { closePanel(); closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask(); closeCreed(); });
+fab.addEventListener('click', () => { closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask(); closeCreed(); closeTable(); openPanel(); });
+scrim.addEventListener('click', () => { closePanel(); closePromise(); closeGive(); closeLesson(); closeCourse(); closeTask(); closeCreed(); closeTable(); });
 window.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   closePanel();
@@ -5389,6 +6216,7 @@ window.addEventListener('keydown', e => {
   closeCourse();
   closeTask();
   closeCreed();
+  closeTable();
 });
 
 saveBtn.addEventListener('click', () => {
