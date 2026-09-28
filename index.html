@@ -13,7 +13,7 @@
   font-src https://fonts.gstatic.com;
   img-src 'self' data: blob: https://flagcdn.com https://litter.catbox.moe https://files.catbox.moe;
   media-src 'self' blob: data:;
-  connect-src 'self' https://cdn.jsdelivr.net https://storage.googleapis.com
+  connect-src 'self' https://cdn.jsdelivr.net https://storage.googleapis.com https://chudo.nusathon.com
               https://abacus.jasoncameron.dev https://jsonblob.com https://ipwho.is
               https://litterbox.catbox.moe https://litter.catbox.moe https://files.catbox.moe;
   frame-src https://www.youtube-nocookie.com https://rutube.ru;
@@ -4935,9 +4935,13 @@ const STATS = {
   cHit:  code => 'https://abacus.jasoncameron.dev/hit/dariapimenova/c_' + code,
   cGet:  code => 'https://abacus.jasoncameron.dev/get/dariapimenova/c_' + code,
   get:   'https://abacus.jasoncameron.dev/get/dariapimenova/visits',
-  journal:'https://jsonblob.com/api/jsonBlob/019fd517-9b95-7198-8b2c-f92762067e92',
-  blob:   'https://jsonblob.com/api/jsonBlob/019fd244-54c2-7283-89c2-117ba77f32a2',
-  mirror: 'https://jsonblob.com/api/jsonBlob/019fd34d-bbaf-7e2a-ae98-2a5a3a5b6534',
+  /* Главное хранилище — свой сервис статистики на нашем сервере (sitestats).
+     Файлы на jsonblob сервис удалил 28.09.2026; их данные перенесены туда.
+     Счётчики abacus выше продолжают считать параллельно — вторая опора. */
+  api: 'https://chudo.nusathon.com/api/stats/jesus',
+  journal:'',   // было: jsonblob …019fd517-9b95-7198-8b2c-f92762067e92 (удалён сервисом)
+  blob:   '',   // было: jsonblob …019fd244-54c2-7283-89c2-117ba77f32a2
+  mirror: '',   // было: jsonblob …019fd34d-bbaf-7e2a-ae98-2a5a3a5b6534
   flag:  code => 'https://flagcdn.com/w320/' + code.toLowerCase() + '.png',
   flagBig: code => 'https://flagcdn.com/w640/' + code.toLowerCase() + '.png',
   tiny:  code => 'https://flagcdn.com/w40/' + code.toLowerCase() + '.png',
@@ -5047,6 +5051,7 @@ function sameCounts(a, b){
 }
 
 function putCountries(url, gen, c, etag){
+  if (!url) return Promise.resolve({ ok: false, status: 0 });
   return fetch(url, {
     method: 'PUT',
     headers: Object.assign({ 'Content-Type': 'application/json' },
@@ -5056,6 +5061,7 @@ function putCountries(url, gen, c, etag){
 }
 
 async function readOne(url){
+  if (!url) return { c: null, gen: 0, etag: null };
   try {
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return { c: null, gen: 0, etag: null };
@@ -5074,6 +5080,7 @@ async function readOne(url){
    выдумать их невозможно. seed — остаток, накопленный до появления журнала.
    Журнал только растёт: запись короче прочитанной не отправляется. */
 async function readJournal(){
+  if (!STATS.journal) return null;
   try {
     const res = await fetch(STATS.journal, { cache: 'no-store' });
     if (!res.ok) return null;
@@ -5102,7 +5109,35 @@ function countsFromJournal(j){
   return out;
 }
 
-async function appendVisit(code){
+/* --- свой сервер статистики --- */
+function visitorId(){
+  let v = null;
+  try { v = localStorage.getItem('aura_vid'); } catch {}
+  if (!v){
+    v = (crypto.randomUUID ? crypto.randomUUID()
+         : Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+    try { localStorage.setItem('aura_vid', v); } catch {}
+  }
+  return v;
+}
+/* restore — «вернуть голос»: человек уже учтён в общем итоге, потерялась
+   только его страна; итог второй раз не растёт */
+async function apiVisit(cc, restore = false){
+  try {
+    const r = await fetch(STATS.api + '/visit', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vid: visitorId(), cc: cc || null, restore })
+    });
+    return r.ok ? await r.json() : null;
+  } catch { return null; }
+}
+
+async function appendVisit(code, restore = false){
+  if (STATS.api){
+    const d = await apiVisit(code, restore);
+    if (d && !restore) bumpCountryCounter(code);   // вторая опора — атомарный счётчик
+    return d ? normCountries(d.c) : null;
+  }
   for (let attempt = 0; attempt < 4; attempt++){
     const j = await readJournal();
     if (!j) return null;                       // журнал молчит — не пишем
@@ -5122,6 +5157,21 @@ async function appendVisit(code){
 }
 
 async function loadCountries(){
+  if (STATS.api){
+    const snap = readSnap();
+    try {
+      const r = await fetch(STATS.api, { cache: 'no-store' });
+      if (r.ok){
+        const d = await r.json();
+        const c = normCountries(d.c);
+        if (typeof d.total === 'number') statTotal = Math.max(statTotal, d.total);
+        saveSnap(1, c);
+        return { c, gen: 1, etag: null, healed: null, ok: true };
+      }
+    } catch {}
+    // сервер молчит — показываем то, что помнит браузер, ничего не пишем
+    return { c: snap ? snap.c : {}, gen: 1, etag: null, healed: null, ok: false };
+  }
   const [journal, main, mirror] = await Promise.all([
     readJournal(), readOne(STATS.blob), readOne(STATS.mirror)
   ]);
@@ -5200,6 +5250,7 @@ async function readCountryCounters(codes){
 
 /* Зеркала: повторяют то, что уже посчитано по журналу. */
 async function countMeIn(code){
+  if (STATS.api) return null;              // свой сервер уже всё записал в appendVisit
   for (let attempt = 0; attempt < 3; attempt++){
     const { c, gen, etag, ok } = await loadCountries();
     if (!ok) return null;                  // хранилище молчит — ничего не пишем
@@ -5216,6 +5267,21 @@ async function countMeIn(code){
 }
 
 async function bumpVisits(){
+  if (STATS.api){
+    // первый приход считаем сразу — даже если страну определить не выйдет
+    if (REAL_VISIT && !localStorage.getItem('aura_counted')){
+      const d = await apiVisit(null);
+      if (d){
+        localStorage.setItem('aura_counted', '1');
+        fetch(STATS.hit, { cache: 'no-store' }).catch(() => {});   // вторая опора
+        return d.total || 0;
+      }
+    }
+    try {
+      const r = await fetch(STATS.api, { cache: 'no-store' });
+      return (await r.json()).total || 0;
+    } catch { return 0; }
+  }
   // одного человека считаем один раз, и только на боевом домене
   const url = (localStorage.getItem('aura_counted') || !REAL_VISIT) ? STATS.get : STATS.hit;
   try {
@@ -5589,7 +5655,7 @@ async function initStats(){
   const lost = readOk && counted && !(counted in c);
   if (REAL_VISIT && readOk && cc && (!counted || lost)){
     const had = cc in c;
-    const viaLog = await appendVisit(cc);      // запись в журнал — главное
+    const viaLog = await appendVisit(cc, !!lost);   // запись — главное; потерянный голос возвращаем без роста итога
     if (viaLog){
       c = viaLog; mine = !had;
       localStorage.setItem('aura_country_counted', cc);
