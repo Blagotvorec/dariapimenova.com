@@ -4282,7 +4282,7 @@ toggle.addEventListener('click', e => {
   updatePhotoReset();
 });
 
-function plural(n){
+function pluralWords(n){  // своё имя: plural(n, one, few, many) ниже — для статистики
   const m10 = n % 10, m100 = n % 100;
   if (m10 === 1 && m100 !== 11) return 'слово';
   if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'слова';
@@ -4294,7 +4294,7 @@ function updateCounter(){
   const n = new Set(words).size;
   counter.textContent = analyzed
     ? `текст: ${n} тем`
-    : `${n} ${plural(n)}`;
+    : `${n} ${pluralWords(n)}`;
 }
 
 let debounceId = 0;
@@ -4337,7 +4337,7 @@ aiBtn.addEventListener('click', async () => {
   userWords[g] = input.value;
   buildParticles(items.map(i => i.word), userWeights[g]);
   const n = items.length;
-  counter.textContent = `ИИ: ${n} ${plural(n)}`;
+  counter.textContent = `ИИ: ${n} ${pluralWords(n)}`;
   setAiStage(null);
 });
 
@@ -5866,7 +5866,25 @@ function moveSeg(seg, btn){
   fill.classList.add('squish');
 }
 
+/* Подсветка следует за кнопкой при любом изменении размера: поворот
+   телефона, скрытие адресной строки, догрузка шрифта, открытие окна
+   сразу после загрузки страницы. */
+const segWatch = typeof ResizeObserver === 'function'
+  ? new ResizeObserver(entries => {
+      for (const e of entries){
+        const on = e.target.querySelector('button.on');
+        const fill = e.target.querySelector('.seg-fill');
+        if (on && fill && on.offsetWidth){
+          fill.style.width = on.offsetWidth + 'px';
+          fill.style.transform = 'translateX(' + (on.offsetLeft - 4) + 'px)';
+        }
+      }
+    })
+  : null;
+const segWatched = new WeakSet();
+
 function setSeg(seg, value){
+  if (segWatch && !segWatched.has(seg)){ segWatch.observe(seg); segWatched.add(seg); }
   const btns = [...seg.querySelectorAll('button')];
   const btn = btns.find(b => b.dataset.v === value) || btns[0];
   btns.forEach(b => b.classList.toggle('on', b === btn));
