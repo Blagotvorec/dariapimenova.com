@@ -5167,6 +5167,12 @@ async function loadCountries(){
   }
 
   if (ok) saveSnap(gen, merged);
+
+  /* Хранилища молчат совсем (сервис удалил файлы или лёг) — показываем то,
+     что браузер помнит сам. Слепок только читается и ничего не перезаписывает:
+     счётчик не должен пропадать с экрана из-за чужого сервиса. */
+  if (!ok && snap) return { c: mergeCountries(merged, snap.c), gen, etag: null, healed, ok };
+
   return { c: merged, gen, etag: main.etag, healed, ok };
 }
 
